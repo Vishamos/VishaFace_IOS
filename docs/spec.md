@@ -28,13 +28,16 @@
 | 2.1 | 기기: **iPhone SE 2세대 (2020, A13, 모델 MXD22KH/A)**. TrueDepth 없음, Neural Engine 있음 → ARKit 얼굴 추적 가능 | 확정 | 사용자 답변 2026-11-17 (모델 번호), 노션 장비 목록 "Iphone SE2" |
 | 2.1a | 폰 iOS **18.7.8**. Xcode 15.2의 공식 지원 범위(iOS 17.2까지)를 넘는다. 폰 iOS는 내릴 수 없다. | 확정 | 사용자 답변 2026-11-17 |
 | 2.1b | 설치 경로: ① Xcode 15.2로 폰에 직접 설치를 먼저 시도 (공식 지원 밖이라 될 수도, 안 될 수도 있음) → ② 안 되면 Mac에서 `.app`만 빌드해 `.ipa`로 묶고, Windows의 서명·설치 도구로 설치 → ③ 최후 수단: 비공식 패처로 Mac을 Sonoma 이상으로 올려 Xcode 16 사용. | 확인 필요 | §7 Q7 |
+| 2.1c | 2026-11-17 확인: Xcode 14.3에서는 "Could not locate device support files"로 폰을 쓸 수 없었다. Xcode 15.x로 바꾼 뒤에는 폰이 정상 인식되고(첫 연결 시 shared cache symbols 복사), Personal Team 자동 서명도 된다. 실제 설치·실행은 아직 미확인(컴파일 단계에서 멈춤, 2.2a). | 확정(인식·서명) / 확인 필요(설치) | Mac 실기기 시험 |
 | 2.2 | 개발 방식: **Unity + AR Foundation + Apple ARKit XR Plugin** | 확정 | 사용자 답변 2026-11-17 |
-| 2.2a | Unity 버전: **Unity 6.0 LTS (6000.0.x 최신 패치)**, AR Foundation·ARKit XR Plugin 6.0.x. Unity 6.3(Android 앱의 6000.3.9f1)은 iOS 빌드에 Xcode 16 이상이 필요해 이 Mac에서 쓸 수 없다. | 해석 | Unity 6.0 요구사항: iOS 13+, Xcode 15+ / 6.3: iOS 15+, Xcode 16+ |
+| 2.2a | Unity 버전: **Unity 6.0 LTS (6000.0.x 최신 패치)**, AR Foundation·ARKit XR Plugin 6.0.x. Unity 6.3(Android 앱의 6000.3.9f1)은 iOS 빌드에 Xcode 16 이상이 필요해 이 Mac에서 쓸 수 없다. 2026-11-17 실제 확인: 6.3으로 만든 Xcode 프로젝트가 Xcode 15에서 UnityFramework 헤더 에러(`AppDelegateListener.h`에서 `NSNotification`·`NSString`을 타입으로 인식 못 함, umbrella header·모듈 빌드 실패)로 컴파일되지 않는다. Unity가 만든 코드를 고치지 않았는데 실패하므로, 우회 설정 대신 6.0으로 내린다. | 확정 | Unity 6.0 요구사항: iOS 13+, Xcode 15+ / 6.3: iOS 15+, Xcode 16+. Mac 빌드 시험 2026-11-17 |
+| 2.2b | Xcode 15 빌드 설정: Unity 타깃(`Unity-iPhone`, `UnityFramework`, `GameAssembly`)의 **User Script Sandboxing = No**가 필요하다(켜져 있으면 IL2CPP 스크립트가 `Sandbox: il2cpp deny file-read-data`로 실패). Unity에서 같은 폴더로 다시 빌드(Replace)하면 이 설정과 Signing Team이 초기화될 수 있다. 반복되면 빌드 후처리 에디터 스크립트로 자동 설정한다. | 확정(6.3에서 확인) / 확인 필요(6.0에서도 필요한지) | Mac 빌드 시험 2026-11-17 |
 | 2.4 | 빌드 Mac: Intel i5 쿼드코어 3GHz, Radeon Pro 555, 32GB, **macOS Ventura 13.7.8 → 쓸 수 있는 최신 Xcode는 15.2** (15.3부터 Sonoma 필요). Ventura가 이 Mac의 마지막 macOS로 보인다. | 확정(사양) / 해석(상한) | 사용자 답변 2026-11-17, Apple Xcode 지원 표 |
 | 2.3 | 코드 작성은 Windows(이 폴더), **빌드·실기기 설치만 Mac**에서 한다. 두 PC 사이는 git으로 옮긴다. | 확정 | 사용자 답변 2026-11-17 |
 | 2.3a | Windows에서는 ARKit·UIKit 코드를 컴파일할 수 없다. 그래서 ① 패킷 직렬화 등 플랫폼 무관 코드는 별도 모듈(Swift Package)로 나눠 Windows에서도 검사하고, ② ARKit·화면 코드의 컴파일 에러는 Mac 빌드 때 확인한다. | AI 제안 | 2.3 |
 | 2.3b | Xcode 프로젝트 파일(`.xcodeproj`)은 Windows에서 손으로 관리하기 어렵다. XcodeGen(`project.yml`로 Mac에서 생성)을 쓰거나, Mac에서 한 번 만든 뒤 소스 폴더만 Windows에서 고친다. | 확인 필요 | 2.3. §7 Q6 |
-| 2.5 | 개발자 계정(무료면 7일마다 재설치), 네트워크 | 확인 필요 | 준비 문서 §1 빈칸 |
+| 2.5 | 개발자 계정: 무료 Apple ID(Personal Team). 설치 후 7일마다 재설치한다. Bundle ID는 한 번 정한 값을 계속 쓴다(무료 계정은 7일에 App ID 10개 제한). 네트워크는 확인 필요. | 확정(계정) / 확인 필요(네트워크) | 사용자 답변 2026-11-17 |
+| 2.6 | 배포: **App Store에 올리지 않는다.** 개인 기기에 직접 설치만 한다. 아이콘·스크린샷·개인정보 처리방침·심사 기준은 고려하지 않는다. | 확정 | 사용자 답변 2026-11-17 |
 
 ## 3. 얼굴 추적
 
@@ -104,4 +107,4 @@ Synapse 헤더 `[To, From]` 다음:
 4. **Q4 데이터 종류 번호**: 블렌드셰이프 데이터는 Android 특징점 데이터와 형식이 다르므로 `0x15`와 다른 번호를 쓸지. 받는 쪽(Vishamos) 표에 한 줄 추가 필요 (plan_review Q3 자문 기록).
 5. **Q5 기존 iOS 앱 여부**: 노션 `VishaFace_IOS`에 기획 메모만 있고 코드는 찾지 못했다(이 PC 기준). 예전 iOS 코드가 있으면 알려 주세요.
 6. **Q6 (해결)** Xcode 프로젝트 관리: Unity가 iOS 빌드 시 Xcode 프로젝트를 만들어 주므로 XcodeGen은 필요 없다. 2.3a·2.3b는 네이티브 기준이라 무효.
-7. **Q7 실기기 설치 경로** (2.1b): 첫 Mac 빌드 때 ①을 시도하고 결과를 기록한다.
+7. **Q7 실기기 설치 경로** (2.1b): Xcode 15에서 폰 인식·서명까지는 된다(2.1c). Unity 6.0으로 다시 빌드한 뒤 ①(Xcode에서 직접 설치)이 끝까지 되는지 확인해 확정한다.
