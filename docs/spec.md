@@ -6,7 +6,7 @@
   - `iPhone_Capture_준비사항.md` (2026-11-16, 사용자 작성) — 아래 표의 "준비 문서"
   - 노션 `VishaFace_IOS` (수정 2026-11-16 15:33), `VishaSTD` 장비 목록 (16:24)
   - VishaSynapse 명세 `docs/tech_spec/02_relay_server.md` (초안), `docs/work/plan_review.md` (2026-11-17)
-  - 기존 Android 앱 `VishaFace` (Unity 6000.3, AR Foundation 6.3.2 / ARCore)
+  - 기존 Android 앱 `VishaFace` (Unity 6000.3, AR Foundation 6.3.2 / ARCore). **테스트용 앱이라 단순 비교 참고만 한다.** 수치(FPS·메시지 크기·재접속 간격 등)를 이 앱에 맞출 필요는 없고 iOS 기준으로 정한다(사용자 2026-11-18).
 
 항목 구분: `확정` 근거 문서에 명확한 것 / `해석` 모호한 부분을 보충한 것(승인 필요) / `확인 필요` 결정이 필요한 것 / `AI 제안` 근거에 없는 것 / `불일치` 근거끼리 다른 것
 
@@ -28,7 +28,7 @@
 | 2.1 | 기기: **iPhone SE 2세대 (2020, A13, 모델 MXD22KH/A)**. TrueDepth 없음, Neural Engine 있음 → ARKit 얼굴 추적 가능 | 확정 | 사용자 답변 2026-11-17 (모델 번호), 노션 장비 목록 "Iphone SE2" |
 | 2.1a | 폰 iOS **18.7.8**. Xcode 15.2의 공식 지원 범위(iOS 17.2까지)를 넘는다. 폰 iOS는 내릴 수 없다. | 확정 | 사용자 답변 2026-11-17 |
 | 2.1b | 설치 경로: ① Xcode 15.2로 폰에 직접 설치를 먼저 시도 (공식 지원 밖이라 될 수도, 안 될 수도 있음) → ② 안 되면 Mac에서 `.app`만 빌드해 `.ipa`로 묶고, Windows의 서명·설치 도구로 설치 → ③ 최후 수단: 비공식 패처로 Mac을 Sonoma 이상으로 올려 Xcode 16 사용. | 확인 필요 | §7 Q7 |
-| 2.1c | 2026-11-17 확인: Xcode 14.3에서는 "Could not locate device support files"로 폰을 쓸 수 없었다. Xcode 15.x로 바꾼 뒤에는 폰이 정상 인식되고(첫 연결 시 shared cache symbols 복사), Personal Team 자동 서명도 된다. 실제 설치·실행은 아직 미확인(컴파일 단계에서 멈춤, 2.2a). | 확정(인식·서명) / 확인 필요(설치) | Mac 실기기 시험 |
+| 2.1c | 2026-11-17 확인: Xcode 14.3에서는 "Could not locate device support files"로 폰을 쓸 수 없었다. Xcode 15.x로 바꾼 뒤에는 폰이 정상 인식되고(첫 연결 시 shared cache symbols 복사), Personal Team 자동 서명도 된다. 2026-11-18 Unity 6.0 빌드로 설치·실행·얼굴 추적까지 확인했다. 얼굴 메시는 ARKit 고정 메시(약 1,220 정점)라 앱마다 같고, Face Cap보다 딱딱해 보이는 것은 표시 방식(디버그 머티리얼)과 Unity 기본 30fps 때문으로 추정한다(3.4a에서 확인). | 확정 | Mac 실기기 시험 |
 | 2.2 | 개발 방식: **Unity + AR Foundation + Apple ARKit XR Plugin** | 확정 | 사용자 답변 2026-11-17 |
 | 2.2a | Unity 버전: **Unity 6.0 LTS (6000.0.x 최신 패치)**, AR Foundation·ARKit XR Plugin 6.0.x. Unity 6.3(Android 앱의 6000.3.9f1)은 iOS 빌드에 Xcode 16 이상이 필요해 이 Mac에서 쓸 수 없다. 2026-11-17 실제 확인: 6.3으로 만든 Xcode 프로젝트가 Xcode 15에서 UnityFramework 헤더 에러(`AppDelegateListener.h`에서 `NSNotification`·`NSString`을 타입으로 인식 못 함, umbrella header·모듈 빌드 실패)로 컴파일되지 않는다. Unity가 만든 코드를 고치지 않았는데 실패하므로, 우회 설정 대신 6.0으로 내린다. | 확정 | Unity 6.0 요구사항: iOS 13+, Xcode 15+ / 6.3: iOS 15+, Xcode 16+. Mac 빌드 시험 2026-11-17 |
 | 2.2b | Xcode 15 빌드 설정: Unity 타깃(`Unity-iPhone`, `UnityFramework`, `GameAssembly`)의 **User Script Sandboxing = No**가 필요하다(켜져 있으면 IL2CPP 스크립트가 `Sandbox: il2cpp deny file-read-data`로 실패). Unity에서 같은 폴더로 다시 빌드(Replace)하면 이 설정과 Signing Team이 초기화될 수 있다. 반복되면 빌드 후처리 에디터 스크립트로 자동 설정한다. | 확정(6.3에서 확인) / 확인 필요(6.0에서도 필요한지) | Mac 빌드 시험 2026-11-17 |
@@ -47,7 +47,9 @@
 | 3.2 | 노션은 "TrueDepth로 깊이값 이용, 시선 추적 가능"이라 적혀 있으나, SE2에는 TrueDepth가 없다. SE2에서도 블렌드셰이프 52개·머리 자세·시선(`lookAtPoint`)은 같은 API로 나온다. 차이는 정확도와 조명: 적외선 대신 RGB 영상만 쓰므로 어두우면 추적이 불안정하고, 미세 표정(볼 부풀림, 혀 등)이 약하게 나올 수 있다. 깊이 영상(`capturedDepthData`)은 없다. | 불일치(노션 문구) | 노션 `VishaFace_IOS` ↔ 장비 목록 SE2. §7 Q2 |
 | 3.2a | 1단계(A2)에서 `ARFaceTrackingConfiguration.isSupported`와 실제 블렌드셰이프 값을 SE2로 먼저 확인한다. 방송 조명에서 눈 깜빡임·입 모양이 충분한지 보고 3.3을 정한다. | AI 제안 | 3.2 |
 | 3.3 | 보낼 데이터: 블렌드셰이프 52개 / 머리 회전(쿼터니언) / 머리 위치 / 눈 방향 중 선택 | 확인 필요 | 준비 문서 §2 빈칸 |
+| 3.3a | 정점(특징점) 좌표 대신 **ARKit 블렌드셰이프 값(0~1)**을 쓴다. Android(ARCore)는 블렌드셰이프가 없어 정점을 골라 썼지만, iOS는 ARKit이 표정을 이미 이름 붙은 값으로 준다. 혀: `tongueOut` 1개(내민 정도만, 방향 없음). 눈동자: `eyeLook{In,Out,Up,Down}_{L,R}` 8개 + AR Foundation `ARFace.leftEye`·`rightEye`·`fixationPoint`(시선 방향 Transform). SE2(TrueDepth 없음)에서 혀·시선 품질은 A2에서 확인. | AI 제안 | 2026-11-18 논의 |
 | 3.4 | 프레임레이트 30 또는 60 FPS (ARKit 최대 60) | 확인 필요 | 준비 문서 §2 |
+| 3.4a | Unity iOS는 기본이 30fps이므로 60fps를 쓰려면 `Application.targetFrameRate = 60`을 지정해야 한다. SE2(TrueDepth 없음)에서 60fps가 지속되는지는 A3에서 60으로 설정해 실측하고(장시간 발열 포함, 4.4), 그 결과로 3.4를 정한다. | AI 제안 | 2026-11-18 논의 |
 | 3.5 | 블렌드셰이프 순서는 ARKit 이름 → 인덱스 고정 표로 정한다. 쿼터니언 성분 순서·좌표계도 표로 고정한다. | 확정 | 준비 문서 §3 |
 
 ## 4. 화면·동작
@@ -107,4 +109,4 @@ Synapse 헤더 `[To, From]` 다음:
 4. **Q4 데이터 종류 번호**: 블렌드셰이프 데이터는 Android 특징점 데이터와 형식이 다르므로 `0x15`와 다른 번호를 쓸지. 받는 쪽(Vishamos) 표에 한 줄 추가 필요 (plan_review Q3 자문 기록).
 5. **Q5 기존 iOS 앱 여부**: 노션 `VishaFace_IOS`에 기획 메모만 있고 코드는 찾지 못했다(이 PC 기준). 예전 iOS 코드가 있으면 알려 주세요.
 6. **Q6 (해결)** Xcode 프로젝트 관리: Unity가 iOS 빌드 시 Xcode 프로젝트를 만들어 주므로 XcodeGen은 필요 없다. 2.3a·2.3b는 네이티브 기준이라 무효.
-7. **Q7 실기기 설치 경로** (2.1b): Xcode 15에서 폰 인식·서명까지는 된다(2.1c). Unity 6.0으로 다시 빌드한 뒤 ①(Xcode에서 직접 설치)이 끝까지 되는지 확인해 확정한다.
+7. **Q7 (해결)** 실기기 설치 경로: ① Xcode 15.2에서 직접 설치로 확정. 2026-11-18 Unity 6.0 빌드를 iOS 18.7.8 SE2에 설치·실행했고 얼굴 추적(AR Default Face)이 동작했다.
