@@ -13,6 +13,7 @@
 - [ ] (VishaSynapse) plan_review Q3 등록 형식·바이트 순서 결정 → 송신 단계의 전제
 
 ## A. 1단계: 추적 + 수치 표시 (송신 없음)
+- [ ] A1b Mac에서 `tools/build_ios.sh` 첫 실행: `build_ios.local.sh`에 TEAM_ID·DEVICE_ID 입력 → 4단계 모두 통과 확인. 실패하면 단계와 로그 마지막 줄을 기록 — 사양: §2.7
 - [ ] A1a 자동 잠금 끔(`isIdleTimerDisabled`) — 사양: §4.3
 - [ ] A2 ARKit 얼굴 추적, 블렌드셰이프·머리 회전 수치 화면 표시 (영상 표시 없음) — 사양: §3, §4.1
 - [ ] A3 FPS·추적 여부 표시. `targetFrameRate = 60`으로 실측(장시간 발열 포함) → 3.4 확정 — 사양: §3.4a, §4.2, §4.4
