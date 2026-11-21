@@ -1,14 +1,14 @@
 # VishaFaceI 사양
 
-- 작성: 2026-11-17
+- 작성: 2026-11-17 / 갱신: 2026-11-21
 - 상태: **초안**
 - 근거
   - `iPhone_Capture_준비사항.md` (2026-11-16, 사용자 작성) — 아래 표의 "준비 문서"
   - 노션 `VishaFace_IOS` (수정 2026-11-16 15:33), `VishaSTD` 장비 목록 (16:24)
-  - VishaSynapse 명세 `docs/tech_spec/02_relay_server.md` (초안), `docs/work/plan_review.md` (2026-11-17)
-  - 기존 Android 앱 `VishaFace` (Unity 6000.3, AR Foundation 6.3.2 / ARCore). **테스트용 앱이라 단순 비교 참고만 한다.** 수치(FPS·메시지 크기·재접속 간격 등)를 이 앱에 맞출 필요는 없고 iOS 기준으로 정한다(사용자 2026-11-18).
+  - VishaSynapse `docs/protocol/README.md` (2026-11-18 판) — 아래 표의 "Synapse 프로토콜". 저장소: https://github.com/Vishamos/VishaSynapse
+  - 기존 Android 앱 `VishaFace` (Unity 6000.3, ARCore). **테스트용 앱이라 단순 비교 참고만 한다.** 수치(FPS·메시지 크기 등)는 iOS 기준으로 정한다(사용자 2026-11-18).
 
-항목 구분: `확정` 근거 문서에 명확한 것 / `해석` 모호한 부분을 보충한 것(승인 필요) / `확인 필요` 결정이 필요한 것 / `AI 제안` 근거에 없는 것 / `불일치` 근거끼리 다른 것
+항목 구분: `확정` 근거 문서·사용자 결정에 명확한 것 / `해석` 모호한 부분을 보충한 것(승인 필요) / `확인 필요` 결정이 필요한 것 / `AI 제안` 근거에 없는 것 / `불일치` 근거끼리 다른 것
 
 ---
 
@@ -19,96 +19,93 @@
 | 1.1 | iPhone 전면 카메라로 얼굴을 추적하고, 결과를 VishaSynapse로 보낸다. | 확정 | 준비 문서 §0 |
 | 1.2 | 받는 쪽(Vishamos / Unity)은 범위 밖이다. | 확정 | 준비 문서 §0 |
 | 1.3 | 웹캠 트래커와 저장소를 분리한 별도 프로젝트로 둔다. | 확정 | 준비 문서 §0 |
-| 1.4 | 기기 식별값은 **22 (Face iOS)**. 목적지 20(Facial)은 21·22 묶음이다. | 확정 | Synapse 명세 02 §4 |
+| 1.4 | 기기 식별값(시그니처)은 **22 (Face iOS)**. 묶음 시그니처는 없다. | 확정 | Synapse 프로토콜 §2 |
 
 ## 2. 개발 환경
 
 | # | 내용 | 구분 | 근거 |
 |---|---|---|---|
-| 2.1 | 기기: **iPhone SE 2세대 (2020, A13, 모델 MXD22KH/A)**. TrueDepth 없음, Neural Engine 있음 → ARKit 얼굴 추적 가능 | 확정 | 사용자 답변 2026-11-17 (모델 번호), 노션 장비 목록 "Iphone SE2" |
-| 2.1a | 폰 iOS **18.7.8**. Xcode 15.2의 공식 지원 범위(iOS 17.2까지)를 넘는다. 폰 iOS는 내릴 수 없다. | 확정 | 사용자 답변 2026-11-17 |
-| 2.1b | 설치 경로: ① Xcode 15.2로 폰에 직접 설치를 먼저 시도 (공식 지원 밖이라 될 수도, 안 될 수도 있음) → ② 안 되면 Mac에서 `.app`만 빌드해 `.ipa`로 묶고, Windows의 서명·설치 도구로 설치 → ③ 최후 수단: 비공식 패처로 Mac을 Sonoma 이상으로 올려 Xcode 16 사용. | 확인 필요 | §7 Q7 |
-| 2.1c | 2026-11-17 확인: Xcode 14.3에서는 "Could not locate device support files"로 폰을 쓸 수 없었다. Xcode 15.x로 바꾼 뒤에는 폰이 정상 인식되고(첫 연결 시 shared cache symbols 복사), Personal Team 자동 서명도 된다. 2026-11-18 Unity 6.0 빌드로 설치·실행·얼굴 추적까지 확인했다. 얼굴 메시는 ARKit 고정 메시(약 1,220 정점)라 앱마다 같고, Face Cap보다 딱딱해 보이는 것은 표시 방식(디버그 머티리얼)과 Unity 기본 30fps 때문으로 추정한다(3.4a에서 확인). | 확정 | Mac 실기기 시험 |
-| 2.2 | 개발 방식: **Unity + AR Foundation + Apple ARKit XR Plugin** | 확정 | 사용자 답변 2026-11-17 |
-| 2.2a | Unity 버전: **Unity 6.0 LTS (6000.0.x 최신 패치)**, AR Foundation·ARKit XR Plugin 6.0.x. Unity 6.3(Android 앱의 6000.3.9f1)은 iOS 빌드에 Xcode 16 이상이 필요해 이 Mac에서 쓸 수 없다. 2026-11-17 실제 확인: 6.3으로 만든 Xcode 프로젝트가 Xcode 15에서 UnityFramework 헤더 에러(`AppDelegateListener.h`에서 `NSNotification`·`NSString`을 타입으로 인식 못 함, umbrella header·모듈 빌드 실패)로 컴파일되지 않는다. Unity가 만든 코드를 고치지 않았는데 실패하므로, 우회 설정 대신 6.0으로 내린다. | 확정 | Unity 6.0 요구사항: iOS 13+, Xcode 15+ / 6.3: iOS 15+, Xcode 16+. Mac 빌드 시험 2026-11-17 |
-| 2.2b | Xcode 15 빌드 설정: Unity 타깃(`Unity-iPhone`, `UnityFramework`, `GameAssembly`)의 **User Script Sandboxing = No**가 필요하다(켜져 있으면 IL2CPP 스크립트가 `Sandbox: il2cpp deny file-read-data`로 실패). Unity에서 같은 폴더로 다시 빌드(Replace)하면 이 설정과 Signing Team이 초기화될 수 있다. 반복되면 빌드 후처리 에디터 스크립트로 자동 설정한다. 2026-11-18 Unity 6.0 빌드는 이 에러 없이 성공했다(사용자 기억으로는 직접 바꾼 적 없음, 경고만 있음). 6.0이 No로 생성하는지, 이전 설정이 남은 것인지는 Xcode에서 값을 확인하면 확정된다. | 확정(6.3에서 필요) / 해석(6.0에서는 불필요로 보임) | Mac 빌드 시험 2026-11-17, 2026-11-18 |
-| 2.4 | 빌드 Mac: Intel i5 쿼드코어 3GHz, Radeon Pro 555, 32GB, **macOS Ventura 13.7.8 → 쓸 수 있는 최신 Xcode는 15.2** (15.3부터 Sonoma 필요). Ventura가 이 Mac의 마지막 macOS로 보인다. | 확정(사양) / 해석(상한) | 사용자 답변 2026-11-17, Apple Xcode 지원 표 |
-| 2.3 | 코드 작성은 Windows(이 폴더), **빌드·실기기 설치만 Mac**에서 한다. 두 PC 사이는 git으로 옮긴다. | 확정 | 사용자 답변 2026-11-17 |
-| 2.3a | Windows에서는 ARKit·UIKit 코드를 컴파일할 수 없다. 그래서 ① 패킷 직렬화 등 플랫폼 무관 코드는 별도 모듈(Swift Package)로 나눠 Windows에서도 검사하고, ② ARKit·화면 코드의 컴파일 에러는 Mac 빌드 때 확인한다. | AI 제안 | 2.3 |
-| 2.3b | Xcode 프로젝트 파일(`.xcodeproj`)은 Windows에서 손으로 관리하기 어렵다. XcodeGen(`project.yml`로 Mac에서 생성)을 쓰거나, Mac에서 한 번 만든 뒤 소스 폴더만 Windows에서 고친다. | 확인 필요 | 2.3. §7 Q6 |
-| 2.5 | 개발자 계정: 무료 Apple ID(Personal Team). 설치 후 7일마다 재설치한다. Bundle ID는 한 번 정한 값을 계속 쓴다(무료 계정은 7일에 App ID 10개 제한). 네트워크는 확인 필요. | 확정(계정) / 확인 필요(네트워크) | 사용자 답변 2026-11-17 |
-| 2.7 | 빌드 자동화: Mac에서 `bash tools/build_ios.sh` 한 번으로 pull → Unity 배치 빌드(`Assets/Editor/IosBuildScript.cs`) → xcodebuild → `devicectl` 설치·실행. Finder에서 `tools/Build_iOS.command`를 더블클릭해도 같다(git에 실행 권한 기록). Team ID·기기는 `tools/build_ios.local.sh`(git 제외)에 둔다. Jenkins·GitHub Actions는 쓰지 않는다(1인 개발, 무료 계정 서명, **공개 저장소라 self-hosted runner 위험**). pull 시 자동 실행(git 훅)은 필요해지면 이 스크립트를 호출하도록 추가한다. 2026-11-21 Mac 실행: Team ID를 바로잡은 뒤 4단계 모두 통과(유선 설치). 무선 설치는 `Failed to allocate RSD device`로 실패(Xcode 15.2 + iOS 18 조합 한계 또는 무선 연결 문제, 미확정). | 확정(방식·유선) / 확인 필요(무선) | 사용자 결정·Mac 시험 2026-11-21 |
-| 2.6 | 배포: **App Store에 올리지 않는다.** 개인 기기에 직접 설치만 한다. 아이콘·스크린샷·개인정보 처리방침·심사 기준은 고려하지 않는다. | 확정 | 사용자 답변 2026-11-17 |
+| 2.1 | 기기: **iPhone SE 2세대 (A13, MXD22KH/A), iOS 18.7.8**. TrueDepth 없음 → RGB 카메라로 ARKit 얼굴 추적. iOS는 내릴 수 없다. | 확정 | 사용자 답변 2026-11-17 |
+| 2.1a | 설치: Xcode 15.2에서 폰 직접 설치가 된다(공식 지원은 iOS 17.2까지지만 2026-11-18 설치·실행·얼굴 추적 확인). | 확정 | Mac 실기기 시험 |
+| 2.2 | 개발 방식: **Unity 6.0 LTS (6000.0.x) + AR Foundation·Apple ARKit XR Plugin 6.0.x** | 확정 | 사용자 답변 2026-11-17 |
+| 2.2a | Unity 6.3은 쓰지 않는다. iOS 빌드에 Xcode 16이 필요하고, 실제로 Xcode 15에서 UnityFramework 헤더 에러로 컴파일되지 않았다(2026-11-17). Xcode 16이 필요한 버전으로 올리지 않는다. | 확정 | Mac 빌드 시험 |
+| 2.2b | Xcode 설정 User Script Sandboxing: Unity 6.3에서는 No로 바꿔야 했다(`Sandbox: il2cpp deny file-read-data`). 6.0 빌드는 바꾸지 않고도 성공했다. 다시 에러가 나면 `Unity-iPhone`·`UnityFramework`·`GameAssembly` 타깃에서 No로 바꾼다. | 확정(6.3) / 해석(6.0 불필요) | Mac 빌드 시험 2026-11-17, 18 |
+| 2.3 | 코드 작성은 Windows, **빌드·실기기 설치만 Mac**에서 한다. 두 PC 사이는 git으로 옮긴다. | 확정 | 사용자 답변 2026-11-17 |
+| 2.4 | 빌드 Mac: Intel i5 3GHz, 32GB, **macOS Ventura 13.7.8 → Xcode 15.2가 상한** (15.3부터 Sonoma 필요). | 확정 | 사용자 답변, Apple Xcode 지원 표 |
+| 2.5 | 개발자 계정: 무료 Apple ID(Personal Team). 7일마다 재설치. Bundle ID `com.VishaSTD.VishaFaceIOS`는 바꾸지 않는다(무료 계정은 7일에 App ID 10개 제한). 네트워크: 서버와 같은 공유기 LAN(Wi-Fi). | 확정 | 사용자 답변 2026-11-17, Synapse 프로토콜 §1 |
+| 2.6 | 배포: **App Store에 올리지 않는다.** 개인 기기에 직접 설치만 한다. | 확정 | 사용자 답변 2026-11-17 |
+| 2.7 | 빌드 자동화: Mac에서 `bash tools/build_ios.sh`(또는 `tools/Build_iOS.command` 더블클릭) 한 번으로 pull → Unity 배치 빌드(`Assets/Editor/IosBuildScript.cs`) → xcodebuild → `devicectl` 설치·실행. Team ID·기기는 `tools/build_ios.local.sh`(git 제외). Jenkins·GitHub Actions는 쓰지 않는다(1인 개발, 무료 계정 서명, 공개 저장소라 self-hosted runner 위험). 2026-11-21 유선 설치까지 4단계 통과. 무선 설치는 `Failed to allocate RSD device`로 실패(원인 미확정). | 확정(유선) / 확인 필요(무선) | 사용자 결정·Mac 시험 2026-11-21 |
 
 ## 3. 얼굴 추적
 
 | # | 내용 | 구분 | 근거 |
 |---|---|---|---|
-| 3.1 | ARKit `ARFaceTrackingConfiguration` 사용. SE2는 TrueDepth 없이 RGB 카메라로 추적(A12 이상 지원). | 확정 | 준비 문서 §1 |
-| 3.2 | 노션은 "TrueDepth로 깊이값 이용, 시선 추적 가능"이라 적혀 있으나, SE2에는 TrueDepth가 없다. SE2에서도 블렌드셰이프 52개·머리 자세·시선(`lookAtPoint`)은 같은 API로 나온다. 차이는 정확도와 조명: 적외선 대신 RGB 영상만 쓰므로 어두우면 추적이 불안정하고, 미세 표정(볼 부풀림, 혀 등)이 약하게 나올 수 있다. 깊이 영상(`capturedDepthData`)은 없다. | 불일치(노션 문구) | 노션 `VishaFace_IOS` ↔ 장비 목록 SE2. §7 Q2 |
-| 3.2a | 1단계(A2)에서 `ARFaceTrackingConfiguration.isSupported`와 실제 블렌드셰이프 값을 SE2로 먼저 확인한다. 방송 조명에서 눈 깜빡임·입 모양이 충분한지 보고 3.3을 정한다. | AI 제안 | 3.2 |
-| 3.3 | 보낼 데이터: 블렌드셰이프 52개 / 머리 회전(쿼터니언) / 머리 위치 / 눈 방향 중 선택 | 확인 필요 | 준비 문서 §2 빈칸 |
-| 3.3a | 정점(특징점) 좌표 대신 **ARKit 블렌드셰이프 값(0~1)**을 쓴다. Android(ARCore)는 블렌드셰이프가 없어 정점을 골라 썼지만, iOS는 ARKit이 표정을 이미 이름 붙은 값으로 준다. 혀: `tongueOut` 1개(내민 정도만, 방향 없음). 눈동자: `eyeLook{In,Out,Up,Down}_{L,R}` 8개 + AR Foundation `ARFace.leftEye`·`rightEye`·`fixationPoint`(시선 방향 Transform). SE2(TrueDepth 없음)에서 혀·시선 품질은 A2에서 확인. | AI 제안 | 2026-11-18 논의 |
-| 3.4 | 프레임레이트 30 또는 60 FPS (ARKit 최대 60) | 확인 필요 | 준비 문서 §2 |
-| 3.4a | Unity iOS는 기본이 30fps이므로 60fps를 쓰려면 `Application.targetFrameRate = 60`을 지정해야 한다. SE2(TrueDepth 없음)에서 60fps가 지속되는지는 A3에서 60으로 설정해 실측하고(장시간 발열 포함, 4.4), 그 결과로 3.4를 정한다. | AI 제안 | 2026-11-18 논의 |
-| 3.5 | 블렌드셰이프 순서는 ARKit 이름 → 인덱스 고정 표로 정한다. 쿼터니언 성분 순서·좌표계도 표로 고정한다. | 확정 | 준비 문서 §3 |
+| 3.1 | ARKit 얼굴 추적(AR Foundation `ARFaceManager`, 전면 카메라). | 확정 | 준비 문서 §1 |
+| 3.2 | 노션은 "TrueDepth로 깊이값 이용"이라 적혀 있으나 SE2에는 TrueDepth가 없다. 블렌드셰이프·시선은 같은 API로 나오지만 정확도가 낮을 수 있다(어두운 조명, 볼 부풀림·혀 같은 미세 표정). 방송 조명에서의 품질은 A2에서 확인한다. | 불일치(노션 문구) | 노션 `VishaFace_IOS` ↔ 장비 목록. §7 Q2 |
+| 3.3 | 보낼 데이터: **블렌드셰이프만** 보낸다. 머리 회전·위치는 다른 캡처 프로그램이 담당하므로 이 앱에서 보내지 않는다. 시선 Transform(3.3a)을 함께 보낼지는 확인 필요. | 확정(머리 제외) / 확인 필요(시선) | 사용자 결정 2026-11-21. §7 Q3 |
+| 3.3a | 표정은 정점 좌표가 아니라 **ARKit 블렌드셰이프(0∼1)**로 보낸다. 혀는 `tongueOut` 1개(내민 정도만), 시선은 `eyeLook{Up,Down,In,Out}` 좌우 8개 + `ARFace.leftEye`·`rightEye`·`fixationPoint`. | AI 제안 | 2026-11-18 논의 |
+| 3.4 | 프레임레이트 30 또는 60 FPS (ARKit 최대 60) | 확인 필요 | 준비 문서 §2. §7 Q3 |
+| 3.4a | Unity iOS 기본은 30fps라 60fps는 `Application.targetFrameRate = 60`이 필요하다. SE2에서 60fps가 장시간 유지되는지 A3에서 실측해 3.4를 정한다. | AI 제안 | 2026-11-18 논의 |
+| 3.5 | 블렌드셰이프 순서는 ARKit 이름 → 인덱스 고정 표로 정한다. | 확정 | 준비 문서 §3 |
+| 3.6 | 얼굴 일부가 가려지거나 옆으로 돌아도 ARKit은 52개 값을 **모두** 준다(안 보이는 쪽은 모델이 추정한 값). 항목별 신뢰도는 없다. 많이 돌아가 추적이 끊기면 값 갱신이 멈추므로, 추적 상태를 flags로 보내고 받는 쪽이 처리한다(마지막 값 유지 또는 무표정으로 복귀). 추적이 끊기는 각도는 A2에서 확인. | AI 제안 | ARKit 동작, 2026-11-21 논의 |
 
 ## 4. 화면·동작
 
 | # | 내용 | 구분 | 근거 |
 |---|---|---|---|
-| 4.1 | 카메라 영상은 화면에 표시하지 않는다(방송 사고 방지). | 해석 | 준비 문서 §0 "기본", §2에서 최종 확인 예정 |
+| 4.1 | 카메라 영상은 화면에 표시하지 않는다(방송 사고 방지). 현재 씬은 `AR Camera Background` 없이 구성. | 해석 | 준비 문서 §0 "기본", §2에서 최종 확인 예정 |
 | 4.2 | 화면 정보: 연결 상태, FPS, 추적 여부 등 | 확인 필요 | 준비 문서 §2 |
 | 4.3 | 백그라운드 동작 불가 → 화면을 켜 둔 채 사용, 자동 잠금 끔(`isIdleTimerDisabled`) | 확정 | 준비 문서 §2 |
-| 4.4 | 장시간 방송 시 발열 대책(충전 중 사용 여부, FPS 낮추기) | 확인 필요 | 준비 문서 §2 |
-| 4.4a | 화면 방향: **세로(Portrait) 고정**. 자동 회전은 끈다(방송 중 기울어지면 카메라 기준 좌표가 바뀌어 머리 회전 값이 튈 수 있음). 가로가 좌우 시야·충전 면에서 유리하다는 검토가 있었으나 우선 세로로 정함. | 확정 | 사용자 결정 2026-11-21 |
-| 4.5 | 서버 IP·포트는 설정 화면에서 입력해 저장한다(하드코딩 금지). 기존 Android 앱은 주소가 코드에 고정되어 있다. | AI 제안 | `VishaFace/Assets/Scripts/SocketClient.cs` |
-| 4.6 | 연결이 끊기면 자동 재접속한다(기존 Android 앱은 10초 간격). | 해석 | Synapse 명세 02 §8 |
+| 4.4 | 장시간 방송 시 발열 대책(충전기 종류, FPS 낮추기). Mac USB 전원은 부족할 수 있어 방송 중에는 벽 충전기를 쓴다. | 확인 필요 | 준비 문서 §2 |
+| 4.4a | 화면 방향: **세로(Portrait) 고정**, 자동 회전 끔(기울어질 때 머리 회전 값이 튀지 않게). | 확정 | 사용자 결정 2026-11-21 |
+| 4.5 | 서버 IP·포트는 설정 화면에서 입력해 저장한다(하드코딩 금지). | 확정 | CLAUDE.md 비밀 값 취급 |
+| 4.6 | 연결이 끊기면 자동 재접속하고 **다시 등록**한다. | 확정 | Synapse 프로토콜 §7 |
 
 ## 5. 통신
 
-준비 문서 §3 이후 VishaSynapse 쪽 규격이 바뀌었다. **헤더 규격은 VishaSynapse 명세가 기준**이고, 이 앱은 그 안의 데이터 부분만 정한다.
+**헤더·등록 규격은 VishaSynapse가 기준**이고, 이 앱은 그 안의 데이터 부분만 정한다.
 
 | # | 내용 | 구분 | 근거 |
 |---|---|---|---|
-| 5.1 | 전송: WebSocket(TCP) 하나로 등록·제어·데이터. 끊김이 실제로 보이면 데이터만 UDP 분리를 검토한다. | 확정 | 준비 문서 §3 |
-| 5.2 | 명령(등록 등)은 JSON, 실시간 데이터는 바이너리 | 확정 | Synapse 명세 02 §6.1 |
-| 5.3 | 바이너리 헤더는 `[To, From]` 각 1바이트, 나머지가 데이터. `From`은 서버가 등록 정보로 채운다. → 준비 문서의 "1번째 바이트가 받을 대상이라 얼굴/몸 구분 불가" 문제는 `From`으로 해소된다. | 확정(헤더) / 해석(`From`) | Synapse 명세 02 §6.4, §6.4a |
-| 5.4 | 준비 문서의 자체 헤더(magic·version·flags·seq·timestamp)는 Synapse 헤더 **뒤의 데이터 부분**에 둔다. 얼굴 데이터 종류 번호(기존 Android의 `0x15`)도 데이터 부분 첫 바이트로 온다. | 해석 | 준비 문서 §3 ↔ plan_review Q3 "Face 송신 `[0a, 15, …]` → `[0a, 출처, 15, …]`" |
-| 5.5 | 숫자는 float32, 리틀 엔디언 | 확정(앱) / 확인 필요(서버 규격) | 준비 문서 §0, plan_review Q3-4 |
-| 5.6 | 목적지: 10(Vishamos 본방+테스트) 또는 11(테스트만) | 해석 | Synapse 명세 02 §4. 기존 Android는 10 |
-| 5.7 | 등록 절차·형식(JSON 여부, 서버의 `[0,0]` 폐지), 연결 체크(ping), 등록 인증 | 확인 필요 | Synapse plan_review Q2·Q3·Q5 |
-| 5.8 | 메시지 크기·빈도: 예상 약 236바이트 × 30~60회/초. 기존 Android는 87바이트 × 10회/초. 서버 한도는 미정이며, Vishamos 수신 버퍼가 1KB라 1KB 이하를 유지한다. | 확인 필요 | 준비 문서 §3, plan_review Q7, Synapse 명세 02 §8.1-4 |
+| 5.1 | 전송: WebSocket(`ws://<서버 LAN IP>:<포트>`, 기본 4000) 하나로 등록·데이터. 인증 없음. | 확정 | Synapse 프로토콜 §1 |
+| 5.2 | 명령(등록 등)은 JSON, 실시간 데이터는 바이너리 | 확정 | Synapse 프로토콜 §4 |
+| 5.3 | 바이너리 헤더는 `[to, from]` 각 1바이트. **`from`은 앱이 22를 넣는다**(서버는 바꾸지 않음). 등록과 다르면 서버가 에러 없이 끊는다(1008 `from_mismatch`). | 확정 | Synapse 프로토콜 §4.2 |
+| 5.4 | 데이터 부분 첫 바이트는 데이터 종류 번호, 그 뒤에 이 앱의 자체 헤더(version·flags·seq·timestamp)와 값을 둔다(§5.9). | 해석 | 준비 문서 §3, Synapse 프로토콜 §8 Face 줄 |
+| 5.5 | 숫자는 float32, 리틀 엔디언 | 확정 | Synapse 프로토콜 §4.2 |
+| 5.6 | 목적지: **11**(Vishamos. 방송용·테스트용 모두 11). | 확정 | Synapse 프로토콜 §2 |
+| 5.7 | 등록: 접속 직후 앱이 먼저 JSON `{"to":0,"from":22,"type":"client.register","data":""}`를 보낸다. **30초 안에** 안 보내면 끊긴다(1008). 응답 `client.registered`를 받은 뒤부터 바이너리를 보낸다. JSON 키는 소문자. | 확정 | Synapse 프로토콜 §3, §4.1 |
+| 5.7a | 연결 유지: 서버가 30초마다 ping, 약 3분간 pong이 없으면 끊는다. `ClientWebSocket`은 **`ReceiveAsync` 대기 중일 때만** pong을 자동으로 보내므로 수신 루프를 항상 돌린다. | 확정(규격) / AI 제안(구현) | Synapse 프로토콜 §7 |
+| 5.7b | 서버 에러는 JSON `type: "error"`, `data: {code, message}`. 바이너리 문제에는 에러가 오지 않는다. 앱은 에러 코드만 표시한다. | 확정 | Synapse 프로토콜 §5, §6 |
+| 5.8 | 메시지 크기·빈도: 약 222바이트 × 30∼60회/초 예상. 서버 한도 64KB, Vishamos 수신 버퍼 1KB라 1KB 이하 유지. 형식이 정해지면 Synapse 프로토콜 §8 용량 표에 Face iOS 줄을 추가한다(그쪽 저장소). | 확정(한도) / 확인 필요(형식) | Synapse 프로토콜 §4, §8 |
+| 5.8a | 송신 구현: .NET 내장 `ClientWebSocket`을 쓴다(추가 라이브러리 없음). Android `SocketClient.cs`는 재사용하지 않고 다시 짠다 — 송신을 겹쳐 호출(60Hz에서 예외), `Aborted` 시 재접속 안 함, 매 송신 로그, IP 하드코딩, 추적·송신 혼재. 송신은 최신값 한 칸 + 단일 송신 루프로 한다. iOS 추가: **로컬 네트워크 권한**(거부하면 모든 접속 실패, `NSLocalNetworkUsageDescription`을 빌드 후처리로 `Info.plist`에 넣음), 앱 복귀 시 재접속. `ws://`는 ATS 대상이 아니다. | AI 제안 | `VishaFace/Assets/Scripts/SocketClient.cs` 검토 2026-11-21 |
 
 ### 5.9 데이터 부분 배치 (초안, AI 제안)
-Synapse 헤더 `[To, From]` 다음:
+헤더 `[11, 22]` 다음:
 
 | 오프셋 | 크기 | 내용 |
 |---|---|---|
-| 0 | 1 | 데이터 종류 (얼굴 = `0x15`, 기존 Android와 같은 값을 쓸지 §7 Q4) |
+| 0 | 1 | 데이터 종류 (§7 Q4) |
 | 1 | 1 | 버전 |
 | 2 | 1 | flags (bit0 추적 중) |
 | 3 | 1 | 예약 |
 | 4 | 4 | seq (uint32) |
 | 8 | 4 | timestamp (float32 또는 uint32 ms, 미정) |
 | 12 | 208 | 블렌드셰이프 52 × float32 |
-| 220 | 16 | 머리 회전 쿼터니언 x·y·z·w float32 |
 
-합계 데이터 236바이트 + 헤더 2 = 238바이트. 3.3 결정에 따라 바뀐다. magic은 Synapse 헤더와 데이터 종류 바이트가 대신하므로 뺐다.
+합계 데이터 220바이트 + 헤더 2 = 222바이트. 블렌드셰이프를 1바이트로 줄이면 데이터 64바이트.
 
 ## 6. 단계
 
 | # | 내용 | 구분 | 근거 |
 |---|---|---|---|
 | 6.1 | 1단계: ARKit 얼굴 추적 + 화면에 수치만 표시 (송신 없음) | 확정 | 준비 문서 §4-3 |
-| 6.2 | 2단계: 송신 계층. VishaSynapse 명세 02의 Q3(등록 형식)이 정해진 뒤 | 확정 | 준비 문서 §4-4 |
+| 6.2 | 2단계: 송신 계층. 남은 전제는 데이터 형식(3.3, §7 Q4) | 확정 | 준비 문서 §4-4 |
 
 ## 7. 결정 필요 질문
 
-1. **Q1 (해결)** 개발 방식: Unity로 결정 (사용자 2026-11-17). 버전은 2.2a. Android 앱(6000.3)과 에디터 버전이 달라 같은 프로젝트로 합치지는 않는다.
-2. **Q2 노션 `VishaFace_IOS` 수정**: "TrueDepth 이용" 문구를 SE2 기준(RGB 추적, 정확도 낮을 수 있음)으로 고칠지. (Claude는 노션을 고치지 않는다)
-3. **Q3 보낼 데이터·FPS** (3.3, 3.4)
-4. **Q4 데이터 종류 번호**: 블렌드셰이프 데이터는 Android 특징점 데이터와 형식이 다르므로 `0x15`와 다른 번호를 쓸지. 받는 쪽(Vishamos) 표에 한 줄 추가 필요 (plan_review Q3 자문 기록).
-5. **Q5 기존 iOS 앱 여부**: 노션 `VishaFace_IOS`에 기획 메모만 있고 코드는 찾지 못했다(이 PC 기준). 예전 iOS 코드가 있으면 알려 주세요.
-6. **Q6 (해결)** Xcode 프로젝트 관리: Unity가 iOS 빌드 시 Xcode 프로젝트를 만들어 주므로 XcodeGen은 필요 없다. 2.3a·2.3b는 네이티브 기준이라 무효.
-7. **Q7 (해결)** 실기기 설치 경로: ① Xcode 15.2에서 직접 설치로 확정. 2026-11-18 Unity 6.0 빌드를 iOS 18.7.8 SE2에 설치·실행했고 얼굴 추적(AR Default Face)이 동작했다.
+해결된 질문(Q1 개발 방식, Q6 Xcode 프로젝트 관리, Q7 설치 경로)은 위 표에 반영하고 지웠다.
+
+- **Q2 노션 `VishaFace_IOS` 수정**: "TrueDepth 이용" 문구를 SE2 기준(RGB 추적)으로 고칠지. (Claude는 노션을 고치지 않는다)
+- **Q3 FPS·시선 Transform 포함 여부** (3.3, 3.4)
+- **Q4 데이터 종류 번호**: 블렌드셰이프 데이터는 Android 특징점 데이터(`0x15`)와 형식이 다르므로 다른 번호를 쓸지. 받는 쪽(Vishamos)과 맞춘다.
+- **Q5 기존 iOS 앱 여부**: 노션에 기획 메모만 있고 코드는 찾지 못했다. 예전 iOS 코드가 있으면 알려 주세요.

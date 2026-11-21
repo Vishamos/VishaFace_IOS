@@ -4,7 +4,7 @@ iPhone 전면 카메라로 얼굴 표정을 추적해 VishaSynapse 중계 서버
 받는 쪽(Vishamos / Unity)과 중계 서버 내부 동작은 범위 밖이다. 사양은 `docs/spec.md`, 남은 작업은 `docs/work/worklist.md`.
 
 ## 비밀 값 취급 (반드시 지킬 것)
-- 앱에는 지금 비밀 값이 없다. 중계 서버 등록 인증(VishaSynapse plan_review Q5, 가칭 `ENV_RELAY_KEY`)이 정해지면 그 키가 첫 비밀 값이 된다.
+- 앱에는 지금 비밀 값이 없다. 중계 서버 등록 인증은 하지 않기로 정해졌다(Synapse 명세 02 §5.5d, LAN 전용). 나중에 비밀 값이 생기면 아래 규칙을 따른다.
 - 비밀 값은 코드·저장소·`Info.plist`·xcconfig에 넣지 않는다. 앱에서는 사용자가 설정 화면에 입력하고 **Keychain**에 저장한다. Claude는 변수명·키 이름만 정해 사용자에게 입력을 요청한다.
 - 서버 IP·포트도 하드코딩하지 않는다(설정 화면 입력, `UserDefaults` 저장). 내부 IP를 코드·문서 예시에 실제 값으로 적지 않는다.
 - 비밀 값이 담긴 객체(키, 요청 헤더)를 로그로 출력하는 코드를 넣지 않는다. 연결 테스트는 성공/실패와 에러 코드만 출력한다.
@@ -19,7 +19,7 @@ iPhone 전면 카메라로 얼굴 표정을 추적해 VishaSynapse 중계 서버
 - 문서·주석은 한국어로 쓴다.
 - 구현 기준은 `docs/spec.md`다. 사양에 없거나 모호하면 추측해서 채우지 말고 "사양 보완 필요"로 묻는다.
 - **트래킹 코드와 송신 코드를 분리한다.** 트래킹 계층은 네트워크를 모르고, 송신 계층은 ARKit을 모른다.
-- 메시지 헤더 규격(`[To, From]`, JSON 키, 바이트 순서)은 VishaSynapse 명세가 기준이다. 이 앱에서 따로 정하지 않는다. 바뀌면 VishaSynapse 쪽 결정을 먼저 확인한다.
+- 메시지 헤더 규격(`[to, from]`, 등록 절차, JSON 키, 바이트 순서)은 VishaSynapse가 기준이다(클라이언트 규칙은 VishaSynapse `docs/protocol/README.md`, 위치는 아래 문서 표). 이 앱에서 따로 정하지 않는다. 바뀌면 VishaSynapse 쪽 결정을 먼저 확인한다.
 - 작업 환경: Unity(6.0 LTS) 작업은 Windows, Xcode 빌드·실기기 설치만 사용자가 Mac(Ventura, Xcode 15.2)에서 한다. 얼굴 추적은 에디터에서 실행되지 않으므로 ARKit 관련 코드는 "실기기 확인 필요"라고 보고에 적는다. Xcode 16이 필요한 Unity·패키지 버전으로 올리지 않는다.
 - 실행: 문법 검사는 허용. 실제 중계 서버 접속은 사용자 승인 후.
 - 의존성(Swift Package 등) 추가는 승인 후. 내장 프레임워크(ARKit, Network, Foundation)를 우선한다.
@@ -39,5 +39,8 @@ iPhone 전면 카메라로 얼굴 표정을 추적해 VishaSynapse 중계 서버
 | `iPhone_Capture_준비사항.md` | 사용자가 작성한 준비 문서 (빈칸은 사용자가 채움) | 읽기 전용 |
 | `docs/spec.md` | 앱 사양 (확정/해석/확인 필요 구분) | 읽기/쓰기 |
 | `docs/work/worklist.md` | 해야 할 작업 (끝난 항목은 지움) | 읽기/쓰기 |
-| `../VishaSynapse/docs/tech_spec/02_relay_server.md` | 중계 서버 명세 (헤더·등록·시그니처) | 읽기 전용 (그쪽 프로젝트에서 고친다) |
+| VishaSynapse `docs/protocol/README.md` | **클라이언트 프로토콜** (접속·등록·헤더·에러·ping·용량 표). 이 앱이 지킬 전송 규칙은 여기만 보면 된다 | 읽기 전용 (그쪽 프로젝트에서 고친다) |
+| VishaSynapse `docs/tech_spec/02_relay_server.md` | 중계 서버 명세 (위 문서의 원본. 둘이 다르면 명세가 맞다) | 읽기 전용 (그쪽 프로젝트에서 고친다) |
+
+VishaSynapse 위치: 기준은 GitHub 공개 저장소 https://github.com/Vishamos/VishaSynapse (`main`). 로컬 복사본(현재 `../VishaSynapse/`)은 폴더가 옮겨질 수 있으므로, 경로가 없거나 내용이 오래돼 보이면 GitHub 쪽을 읽는다.
 | `../VishaFace/` | 기존 Android 앱 (Unity, ARCore). 송신 형식 참고용 | 읽기 전용 |
