@@ -37,7 +37,7 @@
 | 2.3a | Windows에서는 ARKit·UIKit 코드를 컴파일할 수 없다. 그래서 ① 패킷 직렬화 등 플랫폼 무관 코드는 별도 모듈(Swift Package)로 나눠 Windows에서도 검사하고, ② ARKit·화면 코드의 컴파일 에러는 Mac 빌드 때 확인한다. | AI 제안 | 2.3 |
 | 2.3b | Xcode 프로젝트 파일(`.xcodeproj`)은 Windows에서 손으로 관리하기 어렵다. XcodeGen(`project.yml`로 Mac에서 생성)을 쓰거나, Mac에서 한 번 만든 뒤 소스 폴더만 Windows에서 고친다. | 확인 필요 | 2.3. §7 Q6 |
 | 2.5 | 개발자 계정: 무료 Apple ID(Personal Team). 설치 후 7일마다 재설치한다. Bundle ID는 한 번 정한 값을 계속 쓴다(무료 계정은 7일에 App ID 10개 제한). 네트워크는 확인 필요. | 확정(계정) / 확인 필요(네트워크) | 사용자 답변 2026-11-17 |
-| 2.7 | 빌드 자동화: Mac에서 `bash tools/build_ios.sh` 한 번으로 pull → Unity 배치 빌드(`Assets/Editor/IosBuildScript.cs`) → xcodebuild → `devicectl` 설치·실행. Team ID·기기는 `tools/build_ios.local.sh`(git 제외)에 둔다. Jenkins·GitHub Actions는 쓰지 않는다(1인 개발, 무료 계정 서명, **공개 저장소라 self-hosted runner 위험**). pull 시 자동 실행(git 훅)은 필요해지면 이 스크립트를 호출하도록 추가한다. | 확정(방식) / 확인 필요(Mac 첫 실행) | 사용자 결정 2026-11-21 |
+| 2.7 | 빌드 자동화: Mac에서 `bash tools/build_ios.sh` 한 번으로 pull → Unity 배치 빌드(`Assets/Editor/IosBuildScript.cs`) → xcodebuild → `devicectl` 설치·실행. Finder에서 `tools/Build_iOS.command`를 더블클릭해도 같다(git에 실행 권한 기록). Team ID·기기는 `tools/build_ios.local.sh`(git 제외)에 둔다. Jenkins·GitHub Actions는 쓰지 않는다(1인 개발, 무료 계정 서명, **공개 저장소라 self-hosted runner 위험**). pull 시 자동 실행(git 훅)은 필요해지면 이 스크립트를 호출하도록 추가한다. 2026-11-21 Mac 실행: Team ID를 바로잡은 뒤 4단계 모두 통과(유선 설치). 무선 설치는 `Failed to allocate RSD device`로 실패(Xcode 15.2 + iOS 18 조합 한계 또는 무선 연결 문제, 미확정). | 확정(방식·유선) / 확인 필요(무선) | 사용자 결정·Mac 시험 2026-11-21 |
 | 2.6 | 배포: **App Store에 올리지 않는다.** 개인 기기에 직접 설치만 한다. 아이콘·스크린샷·개인정보 처리방침·심사 기준은 고려하지 않는다. | 확정 | 사용자 답변 2026-11-17 |
 
 ## 3. 얼굴 추적
@@ -61,6 +61,7 @@
 | 4.2 | 화면 정보: 연결 상태, FPS, 추적 여부 등 | 확인 필요 | 준비 문서 §2 |
 | 4.3 | 백그라운드 동작 불가 → 화면을 켜 둔 채 사용, 자동 잠금 끔(`isIdleTimerDisabled`) | 확정 | 준비 문서 §2 |
 | 4.4 | 장시간 방송 시 발열 대책(충전 중 사용 여부, FPS 낮추기) | 확인 필요 | 준비 문서 §2 |
+| 4.4a | 화면 방향: **세로(Portrait) 고정**. 자동 회전은 끈다(방송 중 기울어지면 카메라 기준 좌표가 바뀌어 머리 회전 값이 튈 수 있음). 가로가 좌우 시야·충전 면에서 유리하다는 검토가 있었으나 우선 세로로 정함. | 확정 | 사용자 결정 2026-11-21 |
 | 4.5 | 서버 IP·포트는 설정 화면에서 입력해 저장한다(하드코딩 금지). 기존 Android 앱은 주소가 코드에 고정되어 있다. | AI 제안 | `VishaFace/Assets/Scripts/SocketClient.cs` |
 | 4.6 | 연결이 끊기면 자동 재접속한다(기존 Android 앱은 10초 간격). | 해석 | Synapse 명세 02 §8 |
 

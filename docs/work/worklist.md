@@ -1,6 +1,6 @@
 # 작업 목록
 
-> **현재 진행 (2026-11-18):** Unity 6.0 + Xcode 15.2로 SE2에 설치·실행, AR Default Face 추적 확인 완료. 다음은 A2(수치 표시)·A3(FPS).
+> **현재 진행 (2026-11-21):** Mac 빌드 스크립트(`tools/build_ios.sh`, `Build_iOS.command`)로 pull∼유선 설치까지 자동화 확인. 다음은 A2(수치 표시)·A3(FPS).
 
 ## 운영 방식
 - **해야 할 작업만 적는다.** 끝난 항목은 지운다.
@@ -13,9 +13,10 @@
 - [ ] (VishaSynapse) plan_review Q3 등록 형식·바이트 순서 결정 → 송신 단계의 전제
 
 ## A. 1단계: 추적 + 수치 표시 (송신 없음)
-- [ ] A1b Mac에서 `tools/build_ios.sh` 첫 실행: `build_ios.local.sh`에 TEAM_ID·DEVICE_ID 입력 → 4단계 모두 통과 확인. 실패하면 단계와 로그 마지막 줄을 기록 — 사양: §2.7
+- [ ] A1c (선택) 무선 설치: `devicectl`이 무선에서 `Failed to allocate RSD device`로 실패. 신뢰 창 응답 후 재시도해 보고, 계속 실패하면 유선 전용으로 확정 — 사양: §2.7
+- [ ] A1d `Build_iOS.command` 더블클릭 실행 확인 (커밋·pull 후 실행 권한 유지 여부 포함) — 사양: §2.7
 - [ ] A1a 자동 잠금 끔(`isIdleTimerDisabled`) — 사양: §4.3
-- [ ] A2 ARKit 얼굴 추적, 블렌드셰이프·머리 회전 수치 화면 표시 (영상 표시 없음) — 사양: §3, §4.1
+- [ ] A2 ARKit 얼굴 추적, 블렌드셰이프·머리 회전 수치 화면 표시 (영상 표시 없음). Player Settings 방향 Portrait 고정 — 사양: §3, §4.1, §4.4a
 - [ ] A3 FPS·추적 여부 표시. `targetFrameRate = 60`으로 실측(장시간 발열 포함) → 3.4 확정 — 사양: §3.4a, §4.2, §4.4
 
 ## B. 2단계: 송신 (Synapse Q3 이후)
