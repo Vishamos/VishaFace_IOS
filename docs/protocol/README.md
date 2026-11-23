@@ -2,7 +2,7 @@
 
 Face iOS 앱(시그니처 22)이 VishaSynapse를 거쳐 Vishamos(11)로 보내는 얼굴 데이터의 형식이다. **받는 쪽(Vishamos)은 이 문서를 보고 수신부를 만든다.**
 
-- 판: v1 (2026-11-22, 초안)
+- 판: v1 (2026-11-22, 초안. 2026-11-23 머리 회전·위치 추가)
 - 접속·등록·헤더·에러 등 전송 규칙은 VishaSynapse 클라이언트 프로토콜을 따른다: https://github.com/Vishamos/VishaSynapse/blob/main/docs/protocol/README.md
 - 이 문서는 그 규칙의 **바이너리 데이터 부분**만 정한다.
 - 공개 저장소이므로 서버 주소·내부 IP는 적지 않는다.
@@ -15,7 +15,7 @@ Face iOS 앱(시그니처 22)이 VishaSynapse를 거쳐 Vishamos(11)로 보내�
 |---|---|
 | 방향 | Face iOS (22) → Vishamos (11) |
 | 형식 | WebSocket 바이너리 메시지 1개 = 1프레임 |
-| 크기 | **222바이트 고정** (Synapse 헤더 2 + 데이터 220) |
+| 크기 | **250바이트 고정** (Synapse 헤더 2 + 데이터 248) |
 | 빈도 | 초당 최대 60회 (ARKit 갱신마다 1회). 네트워크가 밀리면 오래된 프레임은 버리고 최신 프레임만 보내므로 실제 횟수는 더 적을 수 있다 |
 | 숫자 | 리틀 엔디언. 실수는 IEEE 754 float32 |
 
@@ -29,22 +29,30 @@ Face iOS 앱(시그니처 22)이 VishaSynapse를 거쳐 Vishamos(11)로 보내�
 |---|---|---|---|---|
 | 0 | 1 | uint8 | to | `11` (Vishamos). Synapse 헤더 |
 | 1 | 1 | uint8 | from | `22` (Face iOS). Synapse 헤더 |
-| 2 | 1 | uint8 | type | 데이터 종류. **`0x16`** = 블렌드셰이프 프레임 (§3) |
+| 2 | 1 | uint8 | type | 데이터 종류. **`0x16`** = 얼굴 프레임 (§3) |
 | 3 | 1 | uint8 | version | 이 형식의 판. 지금은 `1` |
 | 4 | 1 | uint8 | flags | bit0: 추적 중(1) / 추적 끊김(0). 나머지 비트는 0 (예약) |
 | 5 | 1 | uint8 | reserved | 0 |
 | 6 | 4 | uint32 | seq | 프레임 번호. 앱이 연결(등록)할 때마다 0부터 1씩 늘린다 |
 | 10 | 4 | uint32 | timeMs | 앱 시작 후 경과 시간(ms). 프레임 간격 계산용 |
 | 14 | 208 | float32 × 52 | blendShapes | 블렌드셰이프 값 52개, 각 0.0∼1.0. 순서는 §4 표 |
+| 222 | 16 | float32 × 4 | headRotation | 머리 회전 쿼터니언 x, y, z, w (§5a) |
+| 238 | 12 | float32 × 3 | headPosition | 머리 위치 x, y, z, 단위 m (§5a) |
 
-합계 222바이트.
+합계 250바이트.
 
 C# 수신 예 (`data`는 받은 바이트 배열):
 ```csharp
-if (data.Length != 222 || data[2] != 0x16 || data[3] != 1) return; // 형식이 다르면 버린다
+if (data.Length != 250 || data[2] != 0x16 || data[3] != 1) return; // 형식이 다르면 버린다
 bool tracking = (data[4] & 0x01) != 0;
 uint seq = BitConverter.ToUInt32(data, 6);
 float jawOpen = BitConverter.ToSingle(data, 14 + 24 * 4); // 인덱스 24 = jawOpen
+var rot = new Quaternion(
+    BitConverter.ToSingle(data, 222), BitConverter.ToSingle(data, 226),
+    BitConverter.ToSingle(data, 230), BitConverter.ToSingle(data, 234));
+var pos = new Vector3(
+    BitConverter.ToSingle(data, 238), BitConverter.ToSingle(data, 242),
+    BitConverter.ToSingle(data, 246));
 ```
 `BitConverter`는 기기 기본 바이트 순서를 쓴다. Windows·iOS·Android 기기는 모두 리틀 엔디언이라 그대로 맞는다.
 
@@ -55,7 +63,7 @@ float jawOpen = BitConverter.ToSingle(data, 14 + 24 * 4); // 인덱스 24 = jawO
 | 값 | 보내는 쪽 | 내용 |
 |---|---|---|
 | `0x15` | Face Android (21) | 특징점 좌표 (옛 형식, 이 문서 범위 밖) |
-| `0x16` | Face iOS (22) | 블렌드셰이프 프레임 (이 문서) |
+| `0x16` | Face iOS (22) | 얼굴 프레임: 블렌드셰이프 + 머리 회전·위치 (이 문서) |
 
 - Android와 다른 번호를 쓰는 이유: 두 형식이 다른데 같은 번호를 쓰면, `from`을 확인하지 않는 수신 코드가 서로의 데이터를 잘못 해석한다.
 - 받는 쪽은 `from`과 `type`을 **둘 다** 확인한다.
@@ -95,13 +103,30 @@ ARKit 블렌드셰이프 이름의 알파벳 순서다. **인덱스는 이 표�
 
 - 값은 0∼1이지만 사람마다 최대치가 1.0에 못 미치는 항목이 많고(0.6∼0.8), 무표정에서도 0.05∼0.2가 나오는 항목이 있다. 보정(배율·기준값)이 필요하면 받는 쪽에서 한다.
 - 작은 떨림이 있다. 스무딩은 받는 쪽에서 한다. 앱은 원본 값을 보낸다.
-- 머리 회전·위치는 보내지 않는다(다른 캡처 프로그램 담당).
 - `seq`가 건너뛰면 그 사이 프레임은 앱에서 버린 것이다(최신 프레임 우선). 받는 쪽은 재요청하지 않는다.
+- 추적이 끊기면 머리 회전·위치도 마지막으로 추적한 값을 보낸다.
+
+---
+
+## 5a. 머리 회전·위치
+
+| 항목 | 값 |
+|---|---|
+| 기준 | **폰 카메라 기준**(카메라에 대한 얼굴의 상대 자세). 폰을 거치대에 고정해 쓰므로, 폰을 어디에 두든 같은 의미가 된다 |
+| 좌표계 | Unity 좌표계(왼손 좌표계, y 위). 받는 쪽 Unity에서 별도 변환 없이 `Quaternion`·`Vector3`로 읽는다 |
+| 회전 | 쿼터니언 x, y, z, w. 정규화된 값 |
+| 위치 | 미터. 카메라에서 얼굴 중심(코 뒤쪽 머리 안)까지 |
+| 정면 | 얼굴이 카메라를 정면으로 볼 때의 회전이 기준값이다. 정확한 값(단위 회전인지, y축 180° 회전인지)은 **실기기 확인 후 이 칸에 적는다** |
+
+- **좌우 방향(거울 반전 여부)은 실기기에서 확인 후 이 문서에 적는다.** 사용자가 오른쪽으로 고개를 돌렸을 때 어느 축으로 어느 부호가 나오는지를 기록한다.
+- 사람마다 정면 자세가 조금씩 다르므로, 기준 자세 보정(캘리브레이션)과 스무딩은 받는 쪽에서 한다.
 
 ---
 
 ## 6. 판 변경 규칙
 
 - 바이트 배치나 인덱스 순서가 바뀌면 `version`을 올리고, 이 문서에 판별 차이를 적는다.
+- 예외: v1은 받는 쪽(Vishamos 수신부)을 만들기 전까지 초안이며, 그동안은 판을 올리지 않고 직접 고친다. 수신부를 만들기 시작하면 위 규칙을 적용한다.
+- 고친 이력: 2026-11-23 머리 회전·위치 추가(222 → 250바이트, 사용자 결정. VishasBody의 얼굴 회전 인식이 부정확함).
 - 받는 쪽은 모르는 `version`의 메시지를 버린다.
 - VishaSynapse 클라이언트 프로토콜 §8 "메시지 용량 표"의 Face iOS 줄을 이 문서와 맞춘다(그쪽 저장소에서 고친다).
