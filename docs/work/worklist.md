@@ -25,5 +25,6 @@
   - 남은 것: 씬에 uGUI 배치·연결(사용자), 실기기에서 키보드 입력 확인. 방송 중 패널 숨김 여부는 미정(지금은 항상 표시)
 - [ ] B2 WebSocket 송신 계층 — 사양: §4.6, §5.7∼5.7b, §5.8a
   - 구현됨(2026-11-23): `Assets/Scripts/Network/Socket.cs`. 접속·등록(from 22)·`client.registered` 후 송신·최신값 한 칸 송신 루프·수신 루프 상시·에러/종료 코드 보관·3초 재접속·앱 복귀 시 즉시 재접속·64KB 초과 메시지 버림. 주소는 `PlayerPrefs` 키 `Synapse.Host`/`Synapse.Port`(기본 4000). Windows 컴파일만 확인
-  - 남은 것: 로컬 네트워크 권한 문구(`NSLocalNetworkUsageDescription`, 빌드 후처리), 씬에 배치, iOS 실기기에서 `ClientWebSocket` 동작·서버 접속 확인(접속은 승인 후)
+  - 로컬 네트워크 권한 문구: `Assets/Editor/IosInfoPlistPostprocess.cs`가 빌드 후 `Info.plist`에 넣음(2026-11-23). Mac 빌드 후 `Builds/iOS/Info.plist`에 키가 있는지, 첫 접속 때 권한 창이 뜨는지 확인
+  - 남은 것: iOS 실기기에서 `ClientWebSocket` 동작·서버 접속 확인(접속은 승인 후)
 - [ ] B3 바이너리 패킷 직렬화 (트래킹 코드와 분리) — 사양: §5.3∼5.5, 프로토콜 v1
