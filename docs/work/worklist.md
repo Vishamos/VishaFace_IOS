@@ -23,7 +23,7 @@
 ## B. 2단계: 송신
 - [ ] B1 설정 화면: 서버 IP·포트 입력·저장 — 사양: §4.5
   - 구현됨(2026-11-23): `Assets/Scripts/UI/ServerSettingsPanel.cs`. 화면 맨 위에 IP·포트 입력과 Connect 버튼, 그 아래 연결 상태·에러 코드. UI는 코드로 생성(씬 배치 없음). 입력 확인 → 저장 → `Socket.Reconnect()`
-  - 남은 것: 실기기에서 키보드 입력·저장 유지 확인. 방송 중 패널 숨김 여부는 미정(지금은 항상 표시)
+  - 남은 것: 실기기에서 키보드 입력·저장 유지 확인
 - [ ] B2 WebSocket 송신 계층 — 사양: §4.6, §5.7∼5.7b, §5.8a
   - 구현됨(2026-11-23): `Assets/Scripts/Network/Socket.cs`. 접속·등록(from 22)·`client.registered` 후 송신·최신값 한 칸 송신 루프·수신 루프 상시·에러/종료 코드 보관·3초 재접속·앱 복귀 시 즉시 재접속·64KB 초과 메시지 버림. 주소는 `PlayerPrefs` 키 `Synapse.Host`/`Synapse.Port`(기본 4000). Windows 컴파일만 확인
   - 로컬 네트워크 권한 문구: `Assets/Editor/IosInfoPlistPostprocess.cs`가 빌드 후 `Info.plist`에 넣음(2026-11-23). Mac 빌드 후 `Builds/iOS/Info.plist`에 키가 있는지, 첫 접속 때 권한 창이 뜨는지 확인
