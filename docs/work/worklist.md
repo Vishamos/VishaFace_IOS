@@ -28,4 +28,6 @@
   - 구현됨(2026-11-23): `Assets/Scripts/Network/Socket.cs`. 접속·등록(from 22)·`client.registered` 후 송신·최신값 한 칸 송신 루프·수신 루프 상시·에러/종료 코드 보관·3초 재접속·앱 복귀 시 즉시 재접속·64KB 초과 메시지 버림. 주소는 `PlayerPrefs` 키 `Synapse.Host`/`Synapse.Port`(기본 4000). Windows 컴파일만 확인
   - 로컬 네트워크 권한 문구: `Assets/Editor/IosInfoPlistPostprocess.cs`가 빌드 후 `Info.plist`에 넣음(2026-11-23). Mac 빌드 후 `Builds/iOS/Info.plist`에 키가 있는지, 첫 접속 때 권한 창이 뜨는지 확인
   - 남은 것: (씬 배치는 `AppBootstrap`이 코드로 함) iOS 실기기에서 `ClientWebSocket` 동작·서버 접속 확인(접속은 승인 후)
-- [ ] B3 바이너리 패킷 직렬화 (트래킹 코드와 분리) — 사양: §5.3∼5.5, 프로토콜 v1
+- [ ] B3 실기기에서 서버 경유 송신 확인 (Vishamos 수신부 또는 Synapse 로그로 250바이트·seq 증가 확인, 접속은 승인 후) — 사양: §5.3∼5.5, 프로토콜 v1
+  - 구현됨(2026-11-23): `FacePacket`(직렬화), `FacePacketSender`(트래킹 → 소켓 연결). EditMode 테스트 `Assets/Tests/EditMode/FacePacketTests.cs` 20개 통과(구현을 보지 않고 프로토콜 문서만으로 작성)
+  - 프로토콜 문서 보완 후보(테스트 작성 중 발견): 블렌드셰이프 0∼1 범위 밖 값 처리(현재 그대로 보냄), 회전 정규화·부호(q/-q) 책임(현재 ARKit 값 그대로)
