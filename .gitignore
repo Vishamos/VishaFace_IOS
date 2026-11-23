@@ -9,6 +9,9 @@
 
 # iOS 빌드 스크립트 개인 설정 (Team ID 등, 공개 저장소에 올리지 않음)
 /tools/build_ios.local.sh
+
+# 개인 에디터 설정
+/.vscode/
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
