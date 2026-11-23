@@ -9,6 +9,9 @@ public static class AppBootstrap
         // 방송 중 화면이 꺼지지 않게 한다. iOS에서는 isIdleTimerDisabled = YES와 같다 (사양 §4.3).
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
+        // 목표 60fps (Unity iOS 기본 30). 발열로 유지되지 않으면 30으로 낮춘다 (사양 §3.4).
+        Application.targetFrameRate = 60;
+
         var app = new GameObject("App");
         var tracker = app.AddComponent<FaceTracker>();
         DebugHud.Create(tracker);

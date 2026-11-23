@@ -6,17 +6,25 @@ using UnityEngine.UI;
 // 글자는 화면 갱신 부담을 줄이려고 0.1초마다 바꾼다. 화면 글자는 내장 폰트의 한글 표시가 확인되지 않아 영어로 쓴다.
 //
 // 배치 (기준 750×1334, 위에서부터 y)
+//   170  FPS·추적 여부
 //   230  머리 자세 3줄
 //   340  블렌드셰이프 2열 × 26줄
 public class DebugHud : MonoBehaviour
 {
     private const float RefreshInterval = 0.1f;
+    private const float FpsWindow = 0.5f;
 
     private FaceTracker tracker;
+    private Text statusText;
     private Text headText;
     private readonly Text[] columns = new Text[2];
     private readonly StringBuilder sb = new StringBuilder(1024);
     private float nextRefresh;
+
+    // FPS: FpsWindow 동안 그린 프레임 수로 계산
+    private int fpsFrames;
+    private float fpsWindowStart;
+    private float fps;
 
     public static DebugHud Create(FaceTracker tracker)
     {
@@ -32,6 +40,7 @@ public class DebugHud : MonoBehaviour
         // 화면 전체 검은 배경 (카메라 영상 대신)
         UiKit.Stretch(UiKit.CreateImage(transform, "Background", Color.black));
 
+        statusText = UiKit.Place(UiKit.CreateText(transform, "Status", 28, TextAnchor.MiddleLeft), 20, 170, 710, 50);
         headText = UiKit.Place(UiKit.CreateText(transform, "Head", 22, TextAnchor.UpperLeft), 20, 230, 710, 100);
 
         const int rows = 26;
@@ -45,11 +54,33 @@ public class DebugHud : MonoBehaviour
 
     private void Update()
     {
+        MeasureFps();
+
         if (Time.unscaledTime < nextRefresh) return;
         nextRefresh = Time.unscaledTime + RefreshInterval;
 
+        RefreshStatus(tracker.Frame);
         RefreshHead(tracker.Frame);
         RefreshBlendShapes(tracker.Frame);
+    }
+
+    private void MeasureFps()
+    {
+        fpsFrames++;
+        float elapsed = Time.unscaledTime - fpsWindowStart;
+        if (elapsed < FpsWindow) return;
+        fps = fpsFrames / elapsed;
+        fpsFrames = 0;
+        fpsWindowStart = Time.unscaledTime;
+    }
+
+    private void RefreshStatus(FaceFrame frame)
+    {
+        sb.Clear();
+        sb.Append("FPS ").Append(fps.ToString("F1"))
+          .Append("   Face: ").Append(frame.Tracking ? "Tracking" : "Lost");
+        statusText.text = sb.ToString();
+        statusText.color = frame.Tracking ? Color.white : new Color(1f, 0.5f, 0.4f);
     }
 
     private void RefreshHead(FaceFrame frame)
