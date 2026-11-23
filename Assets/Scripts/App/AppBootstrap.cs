@@ -8,5 +8,9 @@ public static class AppBootstrap
     {
         // 방송 중 화면이 꺼지지 않게 한다. iOS에서는 isIdleTimerDisabled = YES와 같다 (사양 §4.3).
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
+
+        var app = new GameObject("App");
+        var tracker = app.AddComponent<FaceTracker>();
+        DebugHud.Create(tracker);
     }
 }
