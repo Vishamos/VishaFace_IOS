@@ -14,6 +14,9 @@ public static class AppBootstrap
 
         var app = new GameObject("App");
         var tracker = app.AddComponent<FaceTracker>();
-        DebugHud.Create(tracker);
+        var socket = app.AddComponent<Socket>();
+
+        var hud = DebugHud.Create(tracker);
+        ServerSettingsPanel.Create(hud.transform, socket);
     }
 }
