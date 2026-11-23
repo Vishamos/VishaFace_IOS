@@ -15,6 +15,7 @@ public static class AppBootstrap
         var app = new GameObject("App");
         var tracker = app.AddComponent<FaceTracker>();
         var socket = app.AddComponent<Socket>();
+        FacePacketSender.Create(app, tracker, socket);
 
         var hud = DebugHud.Create(tracker);
         ServerSettingsPanel.Create(hud.transform, socket);
