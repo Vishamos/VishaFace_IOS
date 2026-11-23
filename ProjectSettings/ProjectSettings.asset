@@ -8,7 +8,7 @@ PlayerSettings:
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
-  defaultScreenOrientation: 4
+  defaultScreenOrientation: 0
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
@@ -503,7 +503,10 @@ PlayerSettings:
   enableInternalProfiler: 0
   logObjCUncaughtExceptions: 1
   enableCrashReportAPI: 0
-  cameraUsageDescription: NeedCamera.OK?
+  cameraUsageDescription: "\uD45C\uC815\uC744 \uCD94\uC801\uD558\uB824\uBA74 \uC804\uBA74
+    \uCE74\uBA54\uB77C\uAC00 \uD544\uC694\uD569\uB2C8\uB2E4. \uCE74\uBA54\uB77C \uC601\uC0C1\uC740
+    \uD654\uBA74\uC5D0 \uD45C\uC2DC\uD558\uAC70\uB098 \uC800\uC7A5\xB7\uC804\uC1A1\uD558\uC9C0
+    \uC54A\uC2B5\uB2C8\uB2E4."
   locationUsageDescription: 
   microphoneUsageDescription: 
   bluetoothUsageDescription: 
