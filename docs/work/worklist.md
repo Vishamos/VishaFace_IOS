@@ -11,7 +11,7 @@
 - [ ] 노션 `VishaFace_IOS` 갱신 (TrueDepth 문구 포함, 나중에). 작성 후 Claude가 spec과 대조해 일치 항목은 spec에서 삭제
 - [ ] (VishaSynapse) 프로토콜 §8 용량 표 Face iOS 줄을 `[11, 22, 0x16, …]` 250바이트 × 60회로 갱신(2026-11-22 확인: 아직 88바이트 × 10회, 변경 표의 예 `[11, 22, 15, …]`도 함께) — 그쪽 저장소에서 — 사양: §5.8
 - [ ] (Vishamos) `docs/protocol/README.md` v1 기준으로 수신부 제작 — 그쪽 저장소에서
-- [ ] GitHub issue #1(거울 기준) 답변 댓글: Claude가 초안 작성 → 사용자 승인 후 게시. 문서 정정은 끝남(프로토콜 §4a·§5a·§6) — 사양: §3.3b
+- [ ] push (GitHub Desktop): issue #1 답변이 커밋 `4e94359`의 프로토콜 정정을 가리킴. Vishamos 쪽은 GitHub HEAD를 읽음
 
 ## A. 1단계: 추적 + 수치 표시 (송신 없음)
 - [ ] A1c (선택) 무선 설치 재시도. 계속 `RSD` 에러면 유선 전용으로 확정 — 사양: §2.7
