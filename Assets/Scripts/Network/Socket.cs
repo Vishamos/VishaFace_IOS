@@ -2,6 +2,7 @@ using System;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 // VishaSynapse 중계 서버 송신 계층 (사양 §4.5, §4.6, §5.1∼5.8a, worklist B2)
@@ -9,6 +10,7 @@ using UnityEngine;
 // - 접속 → 등록(from = 22) → client.registered 수신 후에만 바이너리 송신.
 // - 송신은 최신값 한 칸 + 단일 송신 루프 (60Hz 호출에도 송신이 겹치지 않음).
 // - 수신 루프를 항상 돌린다 (ClientWebSocket은 ReceiveAsync 대기 중에만 pong을 보냄, 사양 §5.7a).
+// - 접속 시작부터 10초 안에 등록되지 않으면 포기하고 재접속한다. 멈춘 작업은 기다리지 않는다(포기 신호와 경쟁).
 // - 로그는 상태 변화·에러 코드만. 서버 주소·패킷 내용은 출력하지 않는다.
 public class Socket : MonoBehaviour
 {
@@ -20,7 +22,7 @@ public class Socket : MonoBehaviour
     public const int DefaultPort = 4000;
 
     private const byte MySignature = 22;          // Face iOS
-    private const int ConnectTimeoutMs = 5000;
+    private const float RegisterTimeoutSec = 10f; // 접속 시작 ∼ client.registered 수신 제한
     private const float RetryDelaySec = 3f;
     private const int ReceiveBufferSize = 65536;  // 서버 한도 64KB
 
@@ -28,10 +30,17 @@ public class Socket : MonoBehaviour
     public int LastErrorCode { get; private set; } // 서버 error JSON의 code, 또는 비정상 종료 코드(1008 등). 0 = 없음
     public event Action<SocketState> StateChanged;
 
-    private ClientWebSocket client;
     private byte[] pending;          // 최신값 한 칸
     private bool skipRetryDelay;     // 재접속 요청 시 대기 없이 재접속
     private CancellationTokenSource retryDelayCts; // 재접속 대기 중일 때만 존재
+
+    // 지금 연결 시도의 포기 신호. 값은 포기 이유(로그용).
+    // iOS에서 ConnectAsync·ReceiveAsync가 취소 토큰과 Abort()를 무시하고 멈추는 경우가 있어서(worklist B2 버그),
+    // 연결 작업을 기다리지 않고 이 신호와 경쟁시켜 먼저 오는 쪽을 따른다.
+    private TaskCompletionSource<string> abandon;
+
+    // 연결 세대. 연결이 끝나거나 버려지면 올린다. 버려진 연결이 뒤늦게 응답해도 상태를 바꾸지 못하게 한다.
+    private int generation;
 
     // 패킷을 최신값 칸에 넣는다. 등록 전에 넣은 값은 송신되지 않고 다음 값으로 덮인다.
     public void Send(byte[] packet)
@@ -44,8 +53,16 @@ public class Socket : MonoBehaviour
     public void Reconnect()
     {
         skipRetryDelay = true;
-        client?.Abort();
+        GiveUp(abandon, "재접속 요청");
         retryDelayCts?.Cancel();
+    }
+
+    // 포기 신호를 보내고 그 자리에서 세대를 올린다.
+    // (신호를 받은 쪽이 깨어나기 전에 버려진 연결이 client.registered를 받아도 상태를 바꾸지 못하게)
+    private void GiveUp(TaskCompletionSource<string> signal, string reason)
+    {
+        if (signal != null && signal == abandon && signal.TrySetResult(reason))
+            generation++;
     }
 
     private void Start()
@@ -97,78 +114,117 @@ public class Socket : MonoBehaviour
         }
     }
 
+    // 연결 하나: 접속 → 등록 → 수신. 연결 작업(session)과 포기 신호 중 먼저 끝나는 쪽을 따른다.
     private async Awaitable ConnectOnceAsync(Uri uri)
     {
-        client = new ClientWebSocket();
+        int gen = generation;
+        var ws = new ClientWebSocket();
+        var giveUp = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        abandon = giveUp;
         Interlocked.Exchange(ref pending, null); // 이전 연결 때의 오래된 값은 버린다
         SetState(SocketState.Connecting);
 
-        // 이 연결 하나의 수명. 수신 루프가 끝나면 취소해 송신 루프도 멈춘다.
-        using var connectionCts = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
-        Awaitable sendLoop = null;
+        // 버려진 연결이 아직 토큰을 쓸 수 있으므로 Dispose하지 않는다(GC에 맡김).
+        var connectionCts = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken);
+        using (destroyCancellationToken.Register(() => giveUp.TrySetResult("종료")))
+        {
+            _ = RegisterWatchdogAsync(gen, giveUp, connectionCts.Token);
 
+            Task session = RunSessionAsync(ws, uri, gen, connectionCts.Token);
+            Task first = await Task.WhenAny(session, giveUp.Task);
+
+            connectionCts.Cancel(); // 감시 타이머·송수신 정지 요청
+            if (first == giveUp.Task)
+            {
+                if (!destroyCancellationToken.IsCancellationRequested)
+                    Debug.LogWarning($"[Socket] 연결 포기: {giveUp.Task.Result}");
+                // 멈춘 작업은 기다리지 않는다. 끊기만 하고, 나중에 끝나면 정리한다.
+                try { ws.Abort(); } catch (Exception) { /* 이미 닫힘 */ }
+                _ = session.ContinueWith(_ => ws.Dispose(), TaskScheduler.Default);
+            }
+            else
+            {
+                ws.Dispose();
+            }
+        }
+
+        if (generation == gen) generation++; // 이 연결을 무효로 만든다 (포기했으면 이미 올라가 있음)
+        if (abandon == giveUp) abandon = null;
+        SetState(SocketState.Disconnected);
+    }
+
+    // 접속 시작부터 RegisterTimeoutSec 안에 등록되지 않으면 포기 신호를 보낸다.
+    private async Awaitable RegisterWatchdogAsync(int gen, TaskCompletionSource<string> giveUp, CancellationToken token)
+    {
         try
         {
-            using (var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(destroyCancellationToken))
-            {
-                timeoutCts.CancelAfter(ConnectTimeoutMs);
-                await client.ConnectAsync(uri, timeoutCts.Token);
-            }
+            await Awaitable.WaitForSecondsAsync(RegisterTimeoutSec, token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+        if (gen == generation && State != SocketState.Registered)
+            GiveUp(giveUp, "등록 시간 초과");
+    }
+
+    // 접속 → 등록 메시지 → 수신 루프. 예외는 여기서 처리하고 밖으로 내보내지 않는다.
+    private async Task RunSessionAsync(ClientWebSocket ws, Uri uri, int gen, CancellationToken token)
+    {
+        // 수신 루프가 끝나면 취소해 송신 루프도 멈춘다.
+        using var sessionCts = CancellationTokenSource.CreateLinkedTokenSource(token);
+        Awaitable sendLoop = null;
+        try
+        {
+            await ws.ConnectAsync(uri, sessionCts.Token);
 
             string json = JsonUtility.ToJson(new RegisterMessage
             {
                 to = 0, from = MySignature, type = "client.register", data = ""
             });
-            await client.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(json)),
-                WebSocketMessageType.Text, true, connectionCts.Token);
+            await ws.SendAsync(new ArraySegment<byte>(Encoding.UTF8.GetBytes(json)),
+                WebSocketMessageType.Text, true, sessionCts.Token);
 
-            sendLoop = SendLoopAsync(connectionCts.Token);
-            await ReceiveLoopAsync(connectionCts.Token);
-        }
-        catch (OperationCanceledException) when (destroyCancellationToken.IsCancellationRequested)
-        {
-            // 오브젝트 파괴: 조용히 종료
+            sendLoop = SendLoopAsync(ws, gen, sessionCts.Token);
+            await ReceiveLoopAsync(ws, gen, sessionCts.Token);
         }
         catch (OperationCanceledException)
         {
-            Debug.LogWarning("[Socket] 접속 시간 초과");
+            // 포기·종료로 취소됨: 이유는 ConnectOnceAsync가 기록한다
         }
         catch (Exception e)
         {
-            Debug.LogWarning($"[Socket] 연결 끊김: {e.GetType().Name}");
+            if (gen == generation) Debug.LogWarning($"[Socket] 연결 끊김: {e.GetType().Name}");
         }
         finally
         {
-            connectionCts.Cancel();
+            sessionCts.Cancel();
             if (sendLoop != null)
             {
                 try { await sendLoop; }
                 catch (Exception) { /* 송신 루프는 연결 종료와 함께 끝난다 */ }
             }
-            client.Dispose();
-            client = null;
-            SetState(SocketState.Disconnected);
         }
     }
 
-    private async Awaitable SendLoopAsync(CancellationToken token)
+    private async Awaitable SendLoopAsync(ClientWebSocket ws, int gen, CancellationToken token)
     {
         while (!token.IsCancellationRequested)
         {
             await Awaitable.NextFrameAsync(token);
-            if (State != SocketState.Registered) continue;
+            if (gen != generation || State != SocketState.Registered) continue;
 
             byte[] packet = Interlocked.Exchange(ref pending, null);
             if (packet == null) continue;
 
-            await client.SendAsync(new ArraySegment<byte>(packet), WebSocketMessageType.Binary, true, token);
+            await ws.SendAsync(new ArraySegment<byte>(packet), WebSocketMessageType.Binary, true, token);
         }
     }
 
-    private async Awaitable ReceiveLoopAsync(CancellationToken token)
+    private async Awaitable ReceiveLoopAsync(ClientWebSocket ws, int gen, CancellationToken token)
     {
         byte[] buffer = new byte[ReceiveBufferSize];
-        while (client.State == WebSocketState.Open)
+        while (ws.State == WebSocketState.Open)
         {
             int offset = 0;
             bool overflow = false;
@@ -181,13 +237,15 @@ public class Socket : MonoBehaviour
                     overflow = true;
                     offset = 0;
                 }
-                result = await client.ReceiveAsync(new ArraySegment<byte>(buffer, offset, buffer.Length - offset), token);
+                result = await ws.ReceiveAsync(new ArraySegment<byte>(buffer, offset, buffer.Length - offset), token);
                 offset += result.Count;
             } while (!result.EndOfMessage);
 
+            if (gen != generation) return; // 버려진 연결: 상태를 바꾸지 않는다
+
             if (result.MessageType == WebSocketMessageType.Close)
             {
-                var status = client.CloseStatus;
+                var status = ws.CloseStatus;
                 if (status.HasValue && status.Value != WebSocketCloseStatus.NormalClosure)
                 {
                     LastErrorCode = (int)status.Value;
