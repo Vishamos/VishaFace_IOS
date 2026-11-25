@@ -20,7 +20,6 @@
       "Edit(**/.env.*)",
       "Edit(iPhone_Capture_준비사항.md)",
       "Write(iPhone_Capture_준비사항.md)",
-
       "mcp__notion__notion-create-comment",
       "mcp__notion__notion-create-database",
       "mcp__notion__notion-create-pages",
@@ -35,7 +34,6 @@
       "mcp__notion__notion-update-data-source",
       "mcp__notion__notion-update-page",
       "mcp__notion__notion-update-view",
-
       "mcp__claude_ai_Notion__notion-create-comment",
       "mcp__claude_ai_Notion__notion-create-database",
       "mcp__claude_ai_Notion__notion-create-pages",
@@ -74,12 +72,10 @@
       "mcp__claude_ai_Notion__notion-send-message-to-session",
       "mcp__claude_ai_Notion__notion-stop-session",
       "mcp__claude_ai_Notion__notion-complete-mcp-setup",
-
       "mcp__claude_ai_Claude_Docs__create",
       "mcp__claude_ai_Claude_Docs__update",
       "mcp__claude_ai_Claude_Docs__batch",
       "mcp__claude_ai_Claude_Docs__delete",
-
       "Bash(*git push*)",
       "Bash(*git reset --hard*)",
       "Bash(*git rebase*)",
@@ -92,7 +88,6 @@
       "PowerShell(*git filter-branch*)",
       "PowerShell(*git filter-repo*)",
       "PowerShell(*git commit --amend*)",
-
       "Bash(*ENV_*)",
       "Bash(printenv*)",
       "Bash(env)",
@@ -102,7 +97,6 @@
       "PowerShell(gci env:*)",
       "PowerShell(ls env:*)",
       "PowerShell(dir env:*)",
-
       "Bash(*gh auth token*)",
       "Bash(*--show-token*)",
       "Bash(*gh repo delete*)",
@@ -112,5 +106,8 @@
       "PowerShell(*gh repo delete*)",
       "PowerShell(*gh secret *)"
     ]
+  },
+  "enabledPlugins": {
+    "visha-common@vishas-agent": true
   }
 }

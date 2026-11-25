@@ -10,6 +10,10 @@
 # iOS 빌드 스크립트 개인 설정 (Team ID 등, 공개 저장소에 올리지 않음)
 /tools/build_ios.local.sh
 
+# Claude 작업 폴더: 임시 로그·테스트 결과(.temp), 공개하지 않는 보고서(.private, security 결과)
+/.temp/
+/.private/
+
 # 개인 에디터 설정
 /.vscode/
 /[Ll]ibrary/

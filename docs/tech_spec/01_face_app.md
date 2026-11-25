@@ -1,7 +1,8 @@
-# VishaFaceI 사양
+# 01. VishaFaceI 앱 명세
 
 - 작성: 2026-11-17 / 갱신: 2026-11-23
 - 상태: **초안**
+- 위치: 2026-11-26 `docs/spec.md`에서 옮김(`visha-common` 문서 구조). worklist·프로토콜 문서의 "사양 §x"·"명세 §x"는 이 문서의 절이다.
 - 근거
   - `iPhone_Capture_준비사항.md` (2026-11-16, 사용자 작성) — 아래 표의 "준비 문서"
   - 노션 `VishaFace_IOS` (수정 2026-11-16 15:33), `VishaSTD` 장비 목록 (16:24)
@@ -93,3 +94,14 @@
 ## 7. 결정 필요 질문
 
 지금 열린 질문은 없다. 해결된 질문은 위 표에 반영하고 지웠다(Q1 개발 방식, Q2 TrueDepth 미사용, Q3 FPS 60, Q4 종류 번호 `0x16`·프로토콜 문서화, Q5 기존 iOS 코드 없음, Q6 Xcode 프로젝트, Q7 설치 경로, Q8 시선은 블렌드셰이프로만). 노션 갱신은 worklist에서 관리한다.
+
+## 구현 현황
+
+메인 스레드가 갱신한다. 실기기 확인이 남은 항목은 worklist에 있다.
+
+| 항목 | 상태 | 커밋 |
+|---|---|---|
+| §3 얼굴 추적 (`FaceTracker`, `DebugHud`) — worklist A2·A3 | 구현됨, 실기기 확인 일부 남음 | |
+| §4.5 설정 화면 (`ServerSettingsPanel`) — worklist B1 | 구현됨, 재접속 확인 남음 | |
+| §4.6, §5.7∼5.8a 송신 계층 (`Socket`) — worklist B2 | 구현됨, 첫 접속 버그 수정 후 실기기 확인 남음 | a9e6035 |
+| §5.3∼5.5 패킷 (`FacePacket`, `FacePacketSender`) — worklist B3 | 구현됨, 서버 경유 확인 남음 | 7fa831c |
