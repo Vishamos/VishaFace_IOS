@@ -77,7 +77,7 @@
 | 5.7 | 등록: 접속 직후 앱이 먼저 JSON `{"to":0,"from":22,"type":"client.register","data":""}`를 보낸다. **30초 안에** 안 보내면 끊긴다(1008). 응답 `client.registered`를 받은 뒤부터 바이너리를 보낸다. JSON 키는 소문자. | 확정 | Synapse 프로토콜 §3, §4.1 |
 | 5.7a | 연결 유지: 서버가 30초마다 ping, 약 3분간 pong이 없으면 끊는다. `ClientWebSocket`은 **`ReceiveAsync` 대기 중일 때만** pong을 자동으로 보내므로 수신 루프를 항상 돌린다. | 확정(규격) / AI 제안(구현) | Synapse 프로토콜 §7 |
 | 5.7b | 서버 에러는 JSON `type: "error"`, `data: {code, message}`. 바이너리 문제에는 에러가 오지 않는다. 앱은 에러 코드만 표시한다. | 확정 | Synapse 프로토콜 §5, §6 |
-| 5.8 | 메시지 크기·빈도: 250바이트 고정 × 최대 60회/초. 서버 한도 64KB, Vishamos 수신 버퍼 1KB 이하. Synapse 프로토콜 §8 용량 표의 Face iOS 줄을 이 값으로 맞춘다(그쪽 저장소). | 확정 | Synapse 프로토콜 §4, §8 |
+| 5.8 | 메시지 크기·빈도: 250바이트 고정 × 최대 60회/초. 서버 한도 64KB, Vishamos 수신 버퍼 1KB 이하. 메시지별 크기는 서버 문서가 아니라 보내는 쪽(이 앱의 프로토콜 문서)이 정한다. | 확정 | Synapse 프로토콜 §4, §8 (2026-11-25 main: 용량 표 삭제) |
 | 5.8a | 송신 구현: .NET 내장 `ClientWebSocket`을 쓴다(추가 라이브러리 없음). Android `SocketClient.cs`는 재사용하지 않고 다시 짠다 — 송신을 겹쳐 호출(60Hz에서 예외), `Aborted` 시 재접속 안 함, 매 송신 로그, IP 하드코딩, 추적·송신 혼재. 송신은 최신값 한 칸 + 단일 송신 루프로 한다. iOS 추가: **로컬 네트워크 권한**(거부하면 모든 접속 실패, `NSLocalNetworkUsageDescription`을 빌드 후처리로 `Info.plist`에 넣음), 앱 복귀 시 재접속. `ws://`는 ATS 대상이 아니다. | AI 제안 | `VishaFace/Assets/Scripts/SocketClient.cs` 검토 2026-11-21 |
 
 ### 5.9 데이터 부분 배치

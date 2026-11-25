@@ -42,7 +42,7 @@ iPhone 전면 카메라로 얼굴 표정을 추적해 VishaSynapse 중계 서버
 | `docs/spec.md` | 앱 사양 (확정/해석/확인 필요 구분) | 읽기/쓰기 |
 | `docs/work/worklist.md` | 해야 할 작업 (끝난 항목은 지움) | 읽기/쓰기 |
 | `docs/protocol/README.md` | **얼굴 데이터 프로토콜** (바이너리 배치, 종류 번호, 블렌드셰이프 순서). Vishamos가 이 문서를 보고 수신부를 만든다. 배치를 바꾸면 `version`을 올린다 | 읽기/쓰기 |
-| VishaSynapse `docs/protocol/README.md` | **클라이언트 프로토콜** (접속·등록·헤더·에러·ping·용량 표). 이 앱이 지킬 전송 규칙은 여기만 보면 된다 | 읽기 전용 (그쪽 프로젝트에서 고친다) |
+| VishaSynapse `docs/protocol/README.md` | **클라이언트 프로토콜** (접속·등록·헤더·에러·ping·서버 크기 한도). 이 앱이 지킬 전송 규칙은 여기만 보면 된다 | 읽기 전용 (그쪽 프로젝트에서 고친다) |
 | VishaSynapse `docs/tech_spec/02_relay_server.md` | 중계 서버 명세 (위 문서의 원본. 둘이 다르면 명세가 맞다) | 읽기 전용 (그쪽 프로젝트에서 고친다) |
 
 VishaSynapse 위치: 기준은 GitHub 공개 저장소 https://github.com/Vishamos/VishaSynapse (`main`). 로컬 복사본(현재 `../VishaSynapse/`)은 폴더가 옮겨질 수 있으므로, 경로가 없거나 내용이 오래돼 보이면 GitHub 쪽을 읽는다.
