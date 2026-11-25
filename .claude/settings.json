@@ -1,5 +1,28 @@
 {
   "permissions": {
+    "allow": [
+      "Bash(\"/c/Program Files/Unity/Hub/Editor/6000.0.85f2/Editor/Unity.exe\" -batchmode *)",
+      "Bash(gh issue list *)",
+      "Bash(gh issue view *)",
+      "Bash(gh issue create *)",
+      "Bash(gh issue edit *)",
+      "Bash(gh issue comment *)",
+      "Bash(gh issue close *)",
+      "Bash(gh label create *)",
+      "Bash(gh search issues *)",
+      "Bash(gh api repos/Vishamos/*/contents/*)",
+      "Bash(gh api repos/Vishamos/*/commits/*)",
+      "PowerShell(gh issue list *)",
+      "PowerShell(gh issue view *)",
+      "PowerShell(gh issue create *)",
+      "PowerShell(gh issue edit *)",
+      "PowerShell(gh issue comment *)",
+      "PowerShell(gh issue close *)",
+      "PowerShell(gh label create *)",
+      "PowerShell(gh search issues *)",
+      "PowerShell(gh api repos/Vishamos/*/contents/*)",
+      "PowerShell(gh api repos/Vishamos/*/commits/*)"
+    ],
     "deny": [
       "Read(**/.env)",
       "Read(**/.env.*)",
@@ -104,7 +127,21 @@
       "PowerShell(*gh auth token*)",
       "PowerShell(*--show-token*)",
       "PowerShell(*gh repo delete*)",
-      "PowerShell(*gh secret *)"
+      "PowerShell(*gh secret *)",
+      "Bash(*gh api *-X *)",
+      "Bash(*gh api *--method*)",
+      "Bash(*gh api *-f *)",
+      "Bash(*gh api *-F *)",
+      "Bash(*gh api *--field*)",
+      "Bash(*gh api *--raw-field*)",
+      "Bash(*gh api *--input*)",
+      "PowerShell(*gh api *-X *)",
+      "PowerShell(*gh api *--method*)",
+      "PowerShell(*gh api *-f *)",
+      "PowerShell(*gh api *-F *)",
+      "PowerShell(*gh api *--field*)",
+      "PowerShell(*gh api *--raw-field*)",
+      "PowerShell(*gh api *--input*)"
     ]
   },
   "enabledPlugins": {
